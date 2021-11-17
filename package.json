@@ -2,8 +2,15 @@
     "name": "survaillant-ais",
     "version": "0.0.0",
     "description": "A set of artificial intelligences playing Survaillant",
-    "scripts": {},
+    "scripts": {
+        "lint": "cross-env NODE_ENV=production eslint src/**",
+        "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**"
+    },
     "dependencies": {},
+    "devDependencies": {
+        "eslint": "^8.2.0",
+        "cross-env": "^7.0.3"
+    },
     "type": "module",
     "engines": {
         "node": ">=16.13.0"
