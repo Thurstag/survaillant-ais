@@ -1,0 +1,13 @@
+{
+  "name": "survaillant-ais",
+  "version": "0.0.0",
+  "description": "A set of artificial intelligences playing Survaillant",
+  "scripts": {},
+  "type": "module",
+  "engines": {
+      "node": "16.13.0"
+  },
+  "engineStrict": true,
+  "author": "Tom Mansion, Rémy Chagnas, Sasha Berthout",
+  "license": "MIT"
+}
