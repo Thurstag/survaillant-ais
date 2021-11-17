@@ -3,13 +3,19 @@
     "version": "0.0.0",
     "description": "A set of artificial intelligences playing Survaillant",
     "scripts": {
+        "dqn:train": "node src/dqn/train.js",
         "lint": "cross-env NODE_ENV=production eslint src/**",
         "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**"
     },
-    "dependencies": {},
+    "dependencies": {
+        "argparse": "^2.0.1",
+        "@tensorflow/tfjs": "^2.6.0",
+        "@tensorflow/tfjs-node": "^2.6.0",
+        "@tensorflow/tfjs-node-gpu": "^2.6.0"
+    },
     "devDependencies": {
-        "eslint": "^8.2.0",
-        "cross-env": "^7.0.3"
+        "cross-env": "^7.0.3",
+        "eslint": "^8.2.0"
     },
     "type": "module",
     "engines": {
