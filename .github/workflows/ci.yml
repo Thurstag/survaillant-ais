@@ -1,0 +1,23 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - "**"
+
+env:
+  node-version: 16.13.0
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup NodeJS
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{env.node-version}}
+      - name: Install dependencies
+        run: npm install
+      - name: Run eslint check
+        run: npm run lint

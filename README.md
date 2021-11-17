@@ -1,6 +1,12 @@
 # Survaillant Artificial Intelligences
 
-A set of artificial intelligences playing Survaillant game.
+<p align="center">A set of artificial intelligences playing Survaillant game.</p>
+<p align="center">
+    <a href="https://github.com/Thurstag/survaillant-ais/actions/workflows/ci.yml">
+        <img src="https://github.com/Thurstag/survaillant-ais/actions/workflows/ci.yml/badge.svg" alt="Continuous integration status"
+             style="display: block; margin: auto" />    
+    </a>
+</p>
 
 # Requirements
 
