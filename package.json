@@ -1,13 +1,23 @@
 {
-  "name": "survaillant-ais",
-  "version": "0.0.0",
-  "description": "A set of artificial intelligences playing Survaillant",
-  "scripts": {},
-  "type": "module",
-  "engines": {
-      "node": "16.13.0"
-  },
-  "engineStrict": true,
-  "author": "Tom Mansion, Rémy Chagnas, Sasha Berthout",
-  "license": "MIT"
+    "name": "survaillant-ais",
+    "version": "0.0.0",
+    "description": "A set of artificial intelligences playing Survaillant",
+    "scripts": {},
+    "dependencies": {},
+    "type": "module",
+    "engines": {
+        "node": ">=16.13.0"
+    },
+    "engineStrict": true,
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:Thurstag/survaillant-ais.git"
+    },
+    "contributors": [
+        "Tom Mansion",
+        "Rémy Chagnas",
+        "Sasha Berthout"
+    ],
+    "license": "MIT"
 }
