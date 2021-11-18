@@ -8,14 +8,14 @@
 const Entity = require("../../Entity");
 
 class Item extends Entity {
-  constructor(name, pos, owner) {
-    super(name, pos)
-    this.owner = owner
-  }
-  get() {
-    return {
-      ...super.get(),
+    constructor(name, pos, owner) {
+        super(name, pos);
+        this.owner = owner;
     }
-  }
+    get() {
+        return {
+            ...super.get(),
+        };
+    }
 }
 module.exports = Item;

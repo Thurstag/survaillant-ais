@@ -6,39 +6,39 @@
  */
 
 class MonsterSpawn {
-  constructor(pos) {
-    this.pos = pos
+    constructor(pos) {
+        this.pos = pos;
 
-    this.spawnTime = 3
-    this.timeBeforeSpawn = 0
-    this.monsterSpawning = false
+        this.spawnTime = 3;
+        this.timeBeforeSpawn = 0;
+        this.monsterSpawning = false;
 
-    this.spawningMonster = null
-  }
-  get() {
-    return {
-      pos: this.pos,
-      spawnTime: this.spawnTime,
-      monsterSpawning: this.monsterSpawning,
-      timeBeforeSpawn: this.timeBeforeSpawn,
-      spawningMonster: this.spawningMonster
+        this.spawningMonster = null;
     }
-  }
-  spawnMonster(m) {
-    this.monsterSpawning = true
-    this.spawningMonster = m
-    this.timeBeforeSpawn = this.spawnTime
-  }
-  nextLoop() {
-    if (this.monsterSpawning) {
-      this.timeBeforeSpawn -= 1
-
-      if (this.timeBeforeSpawn == 0) {
-        this.monsterSpawning = false
-        return true
-      }
+    get() {
+        return {
+            pos: this.pos,
+            spawnTime: this.spawnTime,
+            monsterSpawning: this.monsterSpawning,
+            timeBeforeSpawn: this.timeBeforeSpawn,
+            spawningMonster: this.spawningMonster
+        };
     }
-    return false
-  }
+    spawnMonster(m) {
+        this.monsterSpawning = true;
+        this.spawningMonster = m;
+        this.timeBeforeSpawn = this.spawnTime;
+    }
+    nextLoop() {
+        if (this.monsterSpawning) {
+            this.timeBeforeSpawn -= 1;
+
+            if (this.timeBeforeSpawn == 0) {
+                this.monsterSpawning = false;
+                return true;
+            }
+        }
+        return false;
+    }
 }
 module.exports = MonsterSpawn;

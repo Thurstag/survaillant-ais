@@ -8,26 +8,26 @@
 const Entity = require("../Entity");
 
 class Trap extends Entity {
-  constructor(loopStart, name, pos) {
-    super(name, pos)
-    this.loop = loopStart
+    constructor(loopStart, name, pos) {
+        super(name, pos);
+        this.loop = loopStart;
 
-    this.loopTime = 3
-    this.type = "trap"
-  }
-  get() {
-    return {
-      ...super.get(),
-      loop: this.loop,
+        this.loopTime = 3;
+        this.type = "trap";
     }
-  }
-  nextLoop() {
-    this.loop += 1
+    get() {
+        return {
+            ...super.get(),
+            loop: this.loop,
+        };
+    }
+    nextLoop() {
+        this.loop += 1;
 
-    if (this.loop > 2) {
-      this.loop = 3 - this.loopTime
+        if (this.loop > 2) {
+            this.loop = 3 - this.loopTime;
+        }
+        return this.loop == 2;
     }
-    return this.loop == 2
-  }
 }
 module.exports = Trap;
