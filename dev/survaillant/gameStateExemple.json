@@ -1,0 +1,357 @@
+{
+    "gameMode": "solo",
+    "map": {
+        "id": "aPotato",
+        "name": "A potato",
+        "nbSpawn": 2,
+        "board": {
+            "dimX": 11,
+            "dimY": 7
+        },
+        "floor": [
+            [
+                0,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1
+            ],
+            [
+                0,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2
+            ]
+        ],
+        "playerSpawn": {
+            "x": 5,
+            "y": 4
+        },
+        "playerSpawns": [
+            {
+                "x": 2,
+                "y": 4,
+                "color": "blue"
+            },
+            {
+                "x": 8,
+                "y": 4,
+                "color": "red"
+            }
+        ],
+        "monsterSpawns": [
+            {
+                "x": 1,
+                "y": 2
+            },
+            {
+                "x": 1,
+                "y": 6
+            },
+            {
+                "x": 9,
+                "y": 2
+            },
+            {
+                "x": 9,
+                "y": 6
+            }
+        ]
+    },
+    "players": [
+        {
+            "team": 1,
+            "playerName": "A furtive bot",
+            "avatar": "1",
+            "direction": "right",
+            "animationLoop": 0,
+            "inventory": {
+                "arrow": 1,
+                "dynamite": 1,
+                "bomb": 1
+            }
+        }
+    ],
+    "monsterSpawns": [
+        {
+            "pos": {
+                "x": 1,
+                "y": 2
+            },
+            "spawnTime": 3,
+            "monsterSpawning": true,
+            "timeBeforeSpawn": 1,
+            "spawningMonster": {
+                "name": "Short",
+                "pos": {
+                    "x": 1,
+                    "y": 2
+                },
+                "type": "monster",
+                "dead": false,
+                "nextMove": null,
+                "direction": "right",
+                "heading": "right",
+                "avatar": "Short",
+                "animationLoop": 0,
+                "hitPoint": 1
+            }
+        },
+        {
+            "pos": {
+                "x": 1,
+                "y": 6
+            },
+            "spawnTime": 3,
+            "monsterSpawning": false,
+            "timeBeforeSpawn": 0,
+            "spawningMonster": {
+                "name": "Short",
+                "pos": {
+                    "x": 1,
+                    "y": 6
+                },
+                "type": "monster",
+                "dead": false,
+                "nextMove": null,
+                "direction": "right",
+                "heading": "right",
+                "avatar": "Short",
+                "animationLoop": 0,
+                "hitPoint": 1
+            }
+        },
+        {
+            "pos": {
+                "x": 9,
+                "y": 2
+            },
+            "spawnTime": 3,
+            "monsterSpawning": false,
+            "timeBeforeSpawn": 0,
+            "spawningMonster": null
+        },
+        {
+            "pos": {
+                "x": 9,
+                "y": 6
+            },
+            "spawnTime": 3,
+            "monsterSpawning": false,
+            "timeBeforeSpawn": 0,
+            "spawningMonster": null
+        }
+    ],
+    "monsters": [
+        {
+            "type": "monster",
+            "name": "Short",
+            "dead": false,
+            "pos": {
+                "x": 1,
+                "y": 6
+            },
+            "direction": "right",
+            "avatar": "Short",
+            "animationLoop": 0
+        }
+    ],
+    "traps": [
+        {
+            "type": "trap",
+            "name": "trap_0",
+            "dead": false,
+            "pos": {
+                "x": 3,
+                "y": 2
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_1",
+            "dead": false,
+            "pos": {
+                "x": 4,
+                "y": 2
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_2",
+            "dead": false,
+            "pos": {
+                "x": 6,
+                "y": 2
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_3",
+            "dead": false,
+            "pos": {
+                "x": 7,
+                "y": 2
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_4",
+            "dead": false,
+            "pos": {
+                "x": 3,
+                "y": 6
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_5",
+            "dead": false,
+            "pos": {
+                "x": 4,
+                "y": 6
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_6",
+            "dead": false,
+            "pos": {
+                "x": 6,
+                "y": 6
+            },
+            "loop": 2
+        },
+        {
+            "type": "trap",
+            "name": "trap_7",
+            "dead": false,
+            "pos": {
+                "x": 7,
+                "y": 6
+            },
+            "loop": 2
+        }
+    ],
+    "chests": [
+        {
+            "type": "chest",
+            "name": "chest",
+            "dead": false,
+            "pos": {
+                "x": 5,
+                "y": 2
+            },
+            "spawnTime": 6,
+            "timeBeforeSpawn": 0
+        },
+        {
+            "type": "chest",
+            "name": "chest",
+            "dead": false,
+            "pos": {
+                "x": 5,
+                "y": 6
+            },
+            "spawnTime": 6,
+            "timeBeforeSpawn": 0
+        }
+    ],
+    "items": [],
+    "events": [],
+    "score": 11,
+    "combo": 0,
+    "maxCombo": 0,
+    "totalScore": 11
+}
