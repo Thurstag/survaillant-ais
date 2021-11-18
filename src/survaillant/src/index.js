@@ -6,6 +6,7 @@
  */
 
 import fs from "fs";
+import * as tf from "@tensorflow/tfjs";
 
 process.on("SIGINT", () => { process.exit(); });
 
@@ -36,20 +37,92 @@ const Survaillant = {
     createGame: (map) => { return new SurvaillantGame(map, "solo"); }
 };
 
+// TODO: Doc
 class SurvaillantGame {
+    // TODO: Doc
     constructor(map) {
         this.game = new Game(map, "solo");
         let dummyClient = { id: 0, account: null };
         this.game.addPayer(dummyClient, "A furtive bot");
     }
 
+    // TODO: Doc
     getState() { return this.game.get(); }
 
-    movePlayer([ dx, dy ]) {
+    // TODO: Doc
+    getStateAsTensor(w, h) {
+        let state = this.game.get();
+
+        // Ground :           0
+        // Wall :             1
+        // Chest :            2
+        // Trap positon 0 :   3
+        // Trap positon 1 :   4
+        // Trap positon 2 :   5
+        // Monster spawn 0 :  6
+        // Monster spawn 1 :  7
+        // Monster spawn 2 :  8
+        // Monster spawn 3 :  9
+
+        // Vide :             0
+        // Player :           1
+        // Monster :          2
+
+        const buffer = tf.buffer([ 1, h, w, 2 ]);
+        const DUNGEON = 0;
+        const ENTITY = 1;
+
+        // Init buffers with default values
+        for (let i = 0; i < h; i++)
+            for (let j = 0; j < w; j++)
+                buffer.set(1, 0, i, j, DUNGEON);
+
+
+        for (let i = 0; i < h; i++)
+            for (let j = 0; j < w; j++)
+                buffer.set(0, 0, i, j, ENTITY);
+
+        // floor
+        let wLimit = Math.min(state.map.board.dimX, w);
+        let hLimit = Math.min(state.map.board.dimY, h);
+        for (let i = 0; i < wLimit; i++)
+            for (let j = 0; j < hLimit; j++)
+                if (state.map.floor[i][j] === 1)
+                    buffer.set(0, 0, i, j, DUNGEON);
+
+        // chests
+        state.chests.forEach(chest => {
+            buffer.set(2, 0, chest.pos.x, chest.pos.y, DUNGEON);
+        });
+        // Traps
+        state.traps.forEach(trap => {
+            buffer.set(trap.loop + 3, 0, trap.pos.x, trap.pos.y, DUNGEON);
+        });
+        // Spawn
+        state.monsterSpawns.forEach(monsterSpawn => {
+            if(monsterSpawn.monsterSpawning)
+                buffer.set(9 - monsterSpawn.timeBeforeSpawn, 0, monsterSpawn.pos.x, monsterSpawn.pos.y, DUNGEON);
+        });
+
+        // Entities
+        // Player
+        let playerPos = state.players[0].pos;
+        buffer.set(1, 0, playerPos.x, playerPos.y, ENTITY);
+
+        // Monsters
+        state.monsters.forEach(monster => {
+            buffer.set(2, 0, monster.pos.x, monster.pos.y, ENTITY);
+        });
+
+        return buffer.toTensor();
+    }
+
+    // TODO: Doc
+    movePlayer(dx, dy) {
         let player = this.game.players[0];
 
         // Params check
-        if (dx == undefined || dy == undefined) throw "dx and dy requiered";
+        if (dx === undefined || dy === undefined) throw "dx and dy requiered";
 
         let choiceStatus = this.game.checkPlayerMovementChoice(player, { dx, dy });
         if (choiceStatus.badMovement) return -1;
@@ -63,6 +136,7 @@ class SurvaillantGame {
         return 0;
     }
 
+    // TODO: Doc
     selectItem(item) {
         const availableItems = [ "", "arrow", "bomb", "dynamite" ];
 
@@ -79,6 +153,7 @@ class SurvaillantGame {
         player.nextMove = null;
     }
 
+    // TODO: Doc
     getScores() {
         return this.game.getScores();
     }
