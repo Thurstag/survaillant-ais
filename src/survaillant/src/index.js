@@ -43,6 +43,8 @@ class SurvaillantGame {
         this.game.addPayer(dummyClient, "A furtive bot");
     }
 
+    getState() { return this.game.get(); }
+
     movePlayer([ dx, dy ]) {
         let player = this.game.players[0];
 

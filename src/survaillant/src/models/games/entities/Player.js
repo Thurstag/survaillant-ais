@@ -37,13 +37,8 @@ class Player extends Entity {
         // Other
         this.deathThisTurn = true; // to prevent the animation to loop and other bugs
     }
-    get(from = undefined) {
+    get() {
         return {
-            ...super.get(),
-
-            client: from && from.id === this.client.id ?
-                this.client.get() : this.client.getPrivate(),
-            publicId: this.publicId,
             team: this.team,
             playerName: this.playerName,
             avatar: this.avatar,

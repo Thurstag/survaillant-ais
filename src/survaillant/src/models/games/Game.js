@@ -27,7 +27,7 @@ class Game {
         this.map = map;
         this.pathFindingGrid = null;
 
-        // Entitys
+        // Entities
         this.players = [];
         this.monsterSpawns = [];
         this.monsters = [];
@@ -59,11 +59,11 @@ class Game {
         return {
             gameMode: this.gameMode,
             map: this.map.get(),
-            ...this.getEntitys(from),
+            ...this.getEntities(from),
             totalScore: this.calculateTotalScore()
         };
     }
-    getEntitys(from = undefined) {
+    getEntities(from = undefined) {
         return {
             players: this.players.map(p => p.get(from)),
             monsterSpawns: this.monsterSpawns.map(s => s.get()),
