@@ -71,7 +71,6 @@ class Game {
             traps: this.traps.map(t => t.get()),
             chests: this.chests.map(c => c.get()),
             items: this.items.map(i => i.get()),
-            events: this.events.map(e => e.get()),
             score: this.calculateTotalScore(),
             combo: this.combo,
             maxCombo: this.maxCombo,
@@ -200,7 +199,6 @@ class Game {
     nextTurn() {
 
         this.turn += 1;
-        this.events = [];
         this.monstersHits = [];
         this.playersHits = [];
 

@@ -62,7 +62,11 @@ let game = Survaillant.createGame(map);
 // Bot :   [0,  1]
 
 console.log("Starting the game");
-const DIRECTION = [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ];
+
+// let state = game.getStateMatrix({w: 13, h:13})
+game.getStateMatrix({ w: 13, h: 13 })
+
+const DIRECTION = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 for (let i = 0; i < 100; i++) {
     let direction = DIRECTION[Math.floor(Math.random() * DIRECTION.length)];
 
@@ -74,8 +78,11 @@ for (let i = 0; i < 100; i++) {
         console.log("Game over !");
         break;
     }
+    game.getStateMatrix({ w: 13, h: 13 })
+
     console.log("movement OK");
 }
+
 console.log("score : " + game.getScores().totalScore);
 console.log("Killed : " + game.getScores().nbKilledMonsters);
 // game.getScores() :

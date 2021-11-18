@@ -39,6 +39,7 @@ class Player extends Entity {
     }
     get() {
         return {
+            ...super.get(),
             team: this.team,
             playerName: this.playerName,
             avatar: this.avatar,
