@@ -1,3 +1,10 @@
+/**
+ * @licence
+ * Copyright 2021-2021 - Survaillant Artificial Intelligences
+ * Licensed under MIT or any later version
+ * Refer to the LICENSE file included.
+ */
+
 // Import the game functions
 import Survaillant from "../../src/survaillant/src/index.js";
 
@@ -64,7 +71,7 @@ let game = Survaillant.createGame(map);
 console.log("Starting the game");
 
 // let state = game.getStateMatrix({w: 13, h:13})
-game.getStateMatrix({ w: 13, h: 13 })
+game.getStateAsTensor( 13, 13 );
 
 const DIRECTION = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 for (let i = 0; i < 100; i++) {
@@ -78,7 +85,7 @@ for (let i = 0; i < 100; i++) {
         console.log("Game over !");
         break;
     }
-    game.getStateMatrix({ w: 13, h: 13 })
+    game.getStateAsTensor( 13, 13 );
 
     console.log("movement OK");
 }
