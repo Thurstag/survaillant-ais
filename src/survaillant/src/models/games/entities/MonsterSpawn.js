@@ -41,4 +41,4 @@ class MonsterSpawn {
         return false;
     }
 }
-module.exports = MonsterSpawn;
+export default MonsterSpawn;

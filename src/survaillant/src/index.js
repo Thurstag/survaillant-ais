@@ -5,13 +5,13 @@
  * Refer to the LICENSE file included.
  */
 
-const fs = require("fs");
+import fs from "fs";
 
 process.on("SIGINT", () => { process.exit(); });
 
 // Models
-const Map = require("./models/games/Map.js");
-const Game = require("./models/games/Game.js");
+import Map from "./models/games/Map.js";
+import Game from "./models/games/Game.js";
 
 // ======== data ========
 let maps = [];
@@ -20,7 +20,7 @@ let maps = [];
 loadData();
 
 function loadData() {
-    const mapFolder = __dirname + "/../assets/dungeons";
+    const mapFolder = "src/survaillant/assets/dungeons";
     let mapFiles = fs.readdirSync(mapFolder);
     mapFiles.forEach(dugeon => {
         // Read map json file:
@@ -33,12 +33,7 @@ function loadData() {
 
 const Survaillant = {
     getMaps: () => { return maps; },
-    createGame: (map) => {
-        let g = new SurvaillantGame(map, "solo");
-        let dummyClient = { id: 0, account: null };
-        g.addPayer(dummyClient, "A furtive bot");
-        return g;
-    }
+    createGame: (map) => { return new SurvaillantGame(map, "solo"); }
 };
 
 class SurvaillantGame {
@@ -48,7 +43,7 @@ class SurvaillantGame {
         this.game.addPayer(dummyClient, "A furtive bot");
     }
 
-    movePlayer(dx, dy) {
+    movePlayer([ dx, dy ]) {
         let player = this.game.players[0];
 
         // Params check
@@ -87,4 +82,4 @@ class SurvaillantGame {
     }
 }
 
-module.exports = Survaillant;
+export default Survaillant;

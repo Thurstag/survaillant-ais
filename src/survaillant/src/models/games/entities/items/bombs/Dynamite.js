@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Bomb = require("./Bomb");
+import Bomb from "./Bomb.js";
 
 class Dynamite extends Bomb {
     constructor(name, pos, owner) {
@@ -25,4 +25,4 @@ class Dynamite extends Bomb {
         ];
     }
 }
-module.exports = Dynamite;
+export default Dynamite;

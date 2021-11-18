@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Entity = require("../../Entity");
+import Entity from "../../Entity.js";
 
 class Item extends Entity {
     constructor(name, pos, owner) {
@@ -18,4 +18,4 @@ class Item extends Entity {
         };
     }
 }
-module.exports = Item;
+export default  Item;

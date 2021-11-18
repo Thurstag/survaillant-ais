@@ -55,4 +55,4 @@ class Map {
         return this.floor[x][y] !== 2;
     }
 }
-module.exports = Map;
+export default Map;

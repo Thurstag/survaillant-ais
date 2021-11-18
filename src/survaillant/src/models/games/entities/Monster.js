@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Entity = require("../Entity");
+import Entity from "../Entity.js";
 
 class Monster extends Entity {
     constructor(name, pos) {
@@ -34,4 +34,4 @@ class Monster extends Entity {
         }
     }
 }
-module.exports = Monster;
+export default Monster;

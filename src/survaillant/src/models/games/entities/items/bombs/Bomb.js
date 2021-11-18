@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Item = require("../Item");
+import Item from "../Item.js";
 
 class Bomb extends Item {
     constructor(name, pos, owner) {
@@ -45,4 +45,4 @@ class Bomb extends Item {
         return this.explosionTiles.map(t => { return { x: t.x + this.pos.x, y: t.y + this.pos.y }; });
     }
 }
-module.exports = Bomb;
+export default  Bomb;

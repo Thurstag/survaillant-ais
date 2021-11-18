@@ -6,17 +6,17 @@
  */
 
 // Models :
-const Player = require("./entitys/Player");
-const Trap = require("./entitys/Trap");
-const Chest = require("./entitys/Chest");
-const Arrow = require("./entitys/items/arrows/Arrow");
-const Bomb = require("./entitys/items/bombs/Bomb");
-const Dynamite = require("./entitys/items/bombs/Dynamite");
-const MonsterSpawn = require("./entitys/MonsterSpawn");
-const Chort = require("./entitys/monsters/Chort");
+import Player from "./entities/Player.js";
+import Trap from "./entities/Trap.js";
+import Chest from "./entities/Chest.js";
+import Arrow from "./entities/items/arrows/Arrow.js";
+import Bomb from "./entities/items/bombs/Bomb.js";
+import Dynamite from "./entities/items/bombs/Dynamite.js";
+import MonsterSpawn from "./entities/MonsterSpawn.js";
+import Short from "./entities/monsters/Short.js";
 
 // Services
-const cs = require("../../services/coordinationTools").default;
+import cs from "../../services/coordinationTools.js";
 
 class Game {
     constructor(map, gameMode) {
@@ -517,7 +517,7 @@ class Game {
 
                 freeSpawns = cs.shuffle(freeSpawns);
                 for (let i = 0; (i < nbMonstersToSpawn && i < freeSpawns.length); i++) {
-                    freeSpawns[i].spawnMonster(new Chort(freeSpawns[i].pos));
+                    freeSpawns[i].spawnMonster(new Short(freeSpawns[i].pos));
                 }
 
             }
@@ -580,4 +580,4 @@ class Game {
     }
 
 }
-module.exports = Game;
+export default Game;

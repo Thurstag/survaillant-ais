@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const PF = require("pathfinding");
+import PF from "pathfinding";
 
 const finder = new PF.BiAStarFinder();
 // pathFinding
@@ -108,4 +108,4 @@ function betterDirection(game, entity, target) {
 }
 
 const cs = { updatePathFindingGrid, sameTile, nextTile, perpandicularHeading, facing, getSlashAnimation, dist, randomInRange, shuffle, closestEntity, betterDirection };
-exports.default = cs;
+export default cs;

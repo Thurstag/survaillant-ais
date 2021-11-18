@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Entity = require("../Entity");
+import Entity from "../Entity.js";
 
 class Trap extends Entity {
     constructor(loopStart, name, pos) {
@@ -30,4 +30,4 @@ class Trap extends Entity {
         return this.loop == 2;
     }
 }
-module.exports = Trap;
+export default Trap;

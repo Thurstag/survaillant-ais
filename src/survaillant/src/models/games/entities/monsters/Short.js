@@ -5,14 +5,15 @@
  * Refer to the LICENSE file included.
  */
 
-const Monster = require("../Monster");
-// Services
-const cs = require("../../../../services/coordinationTools").default;
+import Monster from "../Monster.js";
 
-class Chort extends Monster {
+// Services
+import cs from "../../../../services/coordinationTools.js";
+
+class Short extends Monster {
     constructor(pos) {
-        super("chort", pos);
-        this.avatar = "chort";
+        super("Short", pos);
+        this.avatar = "Short";
     }
     get() {
         return {
@@ -34,4 +35,4 @@ class Chort extends Monster {
 
     }
 }
-module.exports = Chort;
+export default Short;

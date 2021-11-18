@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Entity = require("../Entity");
+import Entity from "../Entity.js";
 
 class Chest extends Entity {
     constructor(name, pos) {
@@ -35,4 +35,4 @@ class Chest extends Entity {
         return this.timeBeforeSpawn;
     }
 }
-module.exports = Chest;
+export default Chest;

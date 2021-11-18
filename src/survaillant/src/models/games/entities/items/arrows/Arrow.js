@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-const Item = require("../Item");
+import Item from "../Item.js";
 
 class Arrow extends Item {
     constructor(name, pos, owner, heading) {
@@ -27,4 +27,4 @@ class Arrow extends Item {
     nextLoop() {
     }
 }
-module.exports = Arrow;
+export default Arrow;

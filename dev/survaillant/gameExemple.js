@@ -1,5 +1,5 @@
 // Import the game functions
-let Survaillant = require("../../src/survaillant_game/src/index.js");
+import Survaillant from "../../src/survaillant/src/index.js";
 
 // Getting the loaded maps
 let maps = Survaillant.getMaps();
@@ -30,8 +30,6 @@ for (let i = 0; i < 100; i++) {
 
     else if (result === -2) {
         console.log("Game over !");
-        console.log("score : " + game.getScores().totalScore);
-        console.log("Killed : " + game.getScores().nbKilledMonsters);
         break;
     }
     console.log("movement OK");
@@ -43,6 +41,8 @@ for (let i = 0; i < 100; i++) {
     //  nbTurn
     //  totalScore
 }
+console.log("score : " + game.getScores().totalScore);
+console.log("Killed : " + game.getScores().nbKilledMonsters);
 
 // reset game
 game = Survaillant.createGame(map);

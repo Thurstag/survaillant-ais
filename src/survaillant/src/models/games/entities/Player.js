@@ -5,14 +5,14 @@
  * Refer to the LICENSE file included.
  */
 
-const Entity = require("../Entity");
-const { v4: uuidv4 } = require("uuid");
+import Entity from "../Entity.js";
+import uuid from "uuid";
 
 class Player extends Entity {
     constructor(client, playerName, pos, team, avatar) {
         super(client.name, pos);
         this.client = client;
-        this.publicId = uuidv4();
+        this.publicId = uuid.v4();
         this.playerName = playerName;
         this.team = team;
         this.avatar = avatar;
@@ -54,4 +54,4 @@ class Player extends Entity {
     }
 }
 
-module.exports = Player;
+export default Player;
