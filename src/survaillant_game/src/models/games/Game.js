@@ -540,8 +540,7 @@ class Game {
             let lastTeam;
             teams.forEach(t => {
                 let allDead = this.players.filter(p => p.team == t).find(p => !p.dead) == undefined;
-                if (allDead) console.log(" team " + t + " is dead");
-                else {
+                if (!allDead) {
                     nbTeamleft += 1;
                     lastTeam = t;
                 }

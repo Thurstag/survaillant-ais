@@ -120,6 +120,3 @@ dist
 
 # Jetbrains config
 .idea/
-
-# Tests
-tests/
