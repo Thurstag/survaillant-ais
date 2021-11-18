@@ -37,16 +37,20 @@ const Survaillant = {
     createGame: (map) => { return new SurvaillantGame(map, "solo"); }
 };
 
+// TODO: Doc
 class SurvaillantGame {
+    // TODO: Doc
     constructor(map) {
         this.game = new Game(map, "solo");
         let dummyClient = { id: 0, account: null };
         this.game.addPayer(dummyClient, "A furtive bot");
     }
 
+    // TODO: Doc
     getState() { return this.game.get(); }
 
-    getStateMatrix({ w, h }) {
+    // TODO: Doc
+    getStateAsTensor(w, h) {
         let state = this.game.get();
 
         // Ground :           0
@@ -83,7 +87,7 @@ class SurvaillantGame {
         let hLimit = Math.min(state.map.board.dimY, h);
         for (let i = 0; i < wLimit; i++)
             for (let j = 0; j < hLimit; j++)
-                if (state.map.floor[i][j] == 1)
+                if (state.map.floor[i][j] === 1)
                     buffer.set(0, 0, i, j, DUNGEON);
 
         // chests
@@ -112,11 +116,13 @@ class SurvaillantGame {
 
         return buffer.toTensor();
     }
-    movePlayer([ dx, dy ]) {
+
+    // TODO: Doc
+    movePlayer(dx, dy) {
         let player = this.game.players[0];
 
         // Params check
-        if (dx == undefined || dy == undefined) throw "dx and dy requiered";
+        if (dx === undefined || dy === undefined) throw "dx and dy requiered";
 
         let choiceStatus = this.game.checkPlayerMovementChoice(player, { dx, dy });
         if (choiceStatus.badMovement) return -1;
@@ -130,6 +136,7 @@ class SurvaillantGame {
         return 0;
     }
 
+    // TODO: Doc
     selectItem(item) {
         const availableItems = [ "", "arrow", "bomb", "dynamite" ];
 
@@ -146,6 +153,7 @@ class SurvaillantGame {
         player.nextMove = null;
     }
 
+    // TODO: Doc
     getScores() {
         return this.game.getScores();
     }

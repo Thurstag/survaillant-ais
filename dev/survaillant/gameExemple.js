@@ -70,7 +70,7 @@ const DIRECTION = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 for (let i = 0; i < 100; i++) {
     let direction = DIRECTION[Math.floor(Math.random() * DIRECTION.length)];
 
-    let result = game.movePlayer(direction);
+    let result = game.movePlayer(direction[0], direction[1]);
 
     if (result === -1) console.log("Bot moved into a wall !");
 
