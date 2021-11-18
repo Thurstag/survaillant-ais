@@ -16,6 +16,7 @@
 
 - `lint`: a script used to perform code static analysis and code format check
 - `lint:fix`: a script used to fix formatting issues in code
+- `example`: a script used to run a simple game with random actions
 
 Scripts related to modules are explained in Modules section
 
