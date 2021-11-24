@@ -53,18 +53,20 @@ class SurvaillantGame {
     getStateAsTensor(w, h) {
         let state = this.game.get();
 
+        //// DUNGEON(0)
         // Ground :           0
         // Wall :             1
         // Chest :            2
         // Trap positon 0 :   3
         // Trap positon 1 :   4
         // Trap positon 2 :   5
-        // Monster spawn 0 :  6
-        // Monster spawn 1 :  7
-        // Monster spawn 2 :  8
-        // Monster spawn 3 :  9
+        // Monster or chest spawn 3 :  6
+        // Monster or chest spawn 2 :  7
+        // Monster or chest spawn 1 :  8
+        // (When at 'spawn 1', the chest or monster will spawn next turn)
 
-        // Vide :             0
+        //// ENTITY(1)
+        // Empty :            0
         // Player :           1
         // Monster :          2
 
@@ -92,15 +94,16 @@ class SurvaillantGame {
 
         // chests
         state.chests.forEach(chest => {
-            buffer.set(2, 0, chest.pos.x, chest.pos.y, DUNGEON);
+            if (!chest.dead) buffer.set(2, 0, chest.pos.x, chest.pos.y, DUNGEON);
+            else if (chest.timeBeforeSpawn <= 3) buffer.set(9 - chest.timeBeforeSpawn, 0, chest.pos.x, chest.pos.y, DUNGEON);
         });
         // Traps
         state.traps.forEach(trap => {
             buffer.set(trap.loop + 3, 0, trap.pos.x, trap.pos.y, DUNGEON);
         });
-        // Spawn
+        // Spawns
         state.monsterSpawns.forEach(monsterSpawn => {
-            if(monsterSpawn.monsterSpawning)
+            if (monsterSpawn.monsterSpawning)
                 buffer.set(9 - monsterSpawn.timeBeforeSpawn, 0, monsterSpawn.pos.x, monsterSpawn.pos.y, DUNGEON);
         });
 
