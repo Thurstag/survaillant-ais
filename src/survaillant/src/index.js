@@ -56,6 +56,7 @@ class SurvaillantGame {
         // Trap positon 0 :   3
         // Trap positon 1 :   4
         // Trap positon 2 :   5
+        // (When at 'positon 2', the traps will kill next turn)
         // Monster or chest spawn 3 :  6
         // Monster or chest spawn 2 :  7
         // Monster or chest spawn 1 :  8
@@ -114,6 +115,22 @@ class SurvaillantGame {
         });
 
         return buffer.toTensor();
+    }
+    displayTensor(tensor) {
+        process.stdout.write("\n");
+        let t = tensor.arraySync();
+
+        for (let i = 0; i < t[0].length; i++) {
+            for (let j = 0; j < t[0][i].length; j++) {
+                let value = t[0][i][j][1] !== 0 ? (t[0][i][j][1] === 1 ? "P" : "M") : t[0][i][j][0];
+                if (value == 0) process.stdout.write(" ");
+                else if (value == 1) process.stdout.write("#");
+                else if (value == 2) process.stdout.write("C");
+                else process.stdout.write(value + "");
+            }
+            process.stdout.write("\n");
+        }
+
     }
     movePlayer([ dx, dy ]) {
         let player = this.game.players[0];
