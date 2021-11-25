@@ -120,3 +120,4 @@ dist
 
 # Jetbrains config
 .idea/
+*.h5

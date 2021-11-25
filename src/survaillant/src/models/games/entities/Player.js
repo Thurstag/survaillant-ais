@@ -6,13 +6,13 @@
  */
 
 import Entity from "../Entity.js";
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 
 class Player extends Entity {
     constructor(client, playerName, pos, team, avatar) {
         super(client.name, pos);
         this.client = client;
-        this.publicId = uuidv4();
+        this.publicId = 1;
         this.playerName = playerName;
         this.team = team;
         this.avatar = avatar;
