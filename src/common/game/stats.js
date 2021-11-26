@@ -64,7 +64,7 @@ class GamesStats {
         return {
             turns: { ...turns, mean: turns.sum / this.#stats.length },
             rewards: { ...rewards, mean: rewards.sum / this.#stats.length }
-        }
+        };
     }
 
     /**

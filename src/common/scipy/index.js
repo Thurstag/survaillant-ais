@@ -71,7 +71,7 @@ function _linear_filter(b, a, X) {
     const arY = new Array(X.length);
     RawFilter(b, a, X, arY);
 
-    return arY
+    return arY;
 }
 
 // lfilter with axis = 0 and zi=None
