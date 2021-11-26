@@ -1,5 +1,3 @@
-import tf from "@tensorflow/tfjs";
-
 /**
  * This code is the translation of C/Python functions of https://github.com/scipy/scipy.
  * Some parameters and branches have been removed because the code is unreachable in our case.
@@ -11,24 +9,24 @@ function FLOAT_filt(b, a, x, y, Z) {
 
     // normalize the filter coefs only once.
     for (let n = 0; n < b.length; n++) {
-        b[n] = b[n].div(a0);
-        a[n] = a[n].div(a0);
+        b[n] = b[n] / a0;
+        a[n] = a[n] / a0;
     }
 
     for (let k = 0; k < x.length; k++) {
         if (b.length > 1) {
             // Calculate first delay (output)
-            y[k] = x[k].mul(b[0]).add(Z[0]);
+            y[k] = x[k] * b[0] + Z[0];
 
             // Fill in middle delays
             for (let n = 0; n < b.length - 2; n++) {
-                Z[n] = x[k].mul(b[n + 1]).sub(y[k].mul(a[n + 1])).add(Z[1]);
+                Z[n] = x[k] * b[n + 1] - y[k] * a[n + 1] + Z[1];
             }
 
             // Calculate last delay
-            Z[Z.length - 1] = x[k].mul(b[b.length - 1]).sub(y[k].mul(a[a.length - 1]));
+            Z[Z.length - 1] = x[k] * b[b.length - 1] - y[k] * a[a.length - 1];
         } else {
-            y[k] = x[k].mul(b[0]);
+            y[k] = x[k] * b[0];
         }
     }
 }
@@ -42,7 +40,7 @@ function zfill(x, nx, xzfilled, nxzfilled) {
     }
 
     for (let i = nx; i < nxzfilled; i++) {
-        xzfilled[i] = tf.scalar(0);
+        xzfilled[i] = 0;
     }
 }
 
@@ -52,9 +50,9 @@ function RawFilter(b, a, x, y) {
     const nb = b.length;
     const nfilt = na > nb ? na : nb;
 
-    const azfilled = Array.apply(null, new Array(nfilt)).map(() => tf.scalar(0));
-    const bzfilled = Array.apply(null, new Array(nfilt)).map(() => tf.scalar(0));
-    const zfzfilled = Array.apply(null, new Array(nfilt - 1)).map(() => tf.scalar(0));
+    const azfilled = Array.apply(null, new Array(nfilt)).map(() => 0);
+    const bzfilled = Array.apply(null, new Array(nfilt)).map(() => 0);
+    const zfzfilled = Array.apply(null, new Array(nfilt - 1)).map(() => 0);
 
     zfill(a, na, azfilled, nfilt);
     zfill(b, nb, bzfilled, nfilt);
@@ -76,7 +74,7 @@ function _linear_filter(b, a, X) {
 
 // lfilter with axis = 0 and zi=None
 function lfilter(b, a, x) {
-    return tf.tidy(() => _linear_filter(b, a, x));
+    return _linear_filter(b, a, x);
 }
 
 export default { lfilter };
