@@ -31,19 +31,23 @@ class GamesStats {
     /**
      * Generate a summary of statistics of stored games
      *
-     * @return {{rewards: {min: number, max: number, mean: number, sum: number}, turns: {min: number, max: number, mean: number, sum: number}}}
+     * @return {{rewards: {std: number, min: number, max: number, mean: number, sum: number}, turns: {std: number, min: number, max: number, mean: number, sum: number}}}
      * Statistics about rewards obtained and number of turns reached
      */
     summary() {
         let turns = {
             min: Number.MAX_VALUE,
             max: Number.MIN_VALUE,
-            sum: 0
+            sum: 0,
+            mean: 0,
+            std: 0
         };
         let rewards = {
             min: Number.MAX_VALUE,
             max: Number.MIN_VALUE,
-            sum: 0
+            sum: 0,
+            mean: 0,
+            std: 0
         };
 
         for (const stats of this.#stats) {
@@ -60,10 +64,21 @@ class GamesStats {
             rewards.sum += rewardsSum;
         }
 
+        const invLength = 1 / this.#stats.length;
+        turns.mean = turns.sum * invLength;
+        rewards.mean = rewards.sum * invLength;
+
+        // Compute standard deviation
+        for (const stats of this.#stats) {
+            turns.std += Math.pow(stats.turns - turns.mean, 2);
+            rewards.std += Math.pow(stats.rewards - rewards.mean, 2);
+        }
+        turns.std = Math.sqrt(invLength * turns.std);
+        rewards.std = Math.sqrt(invLength * rewards.std);
 
         return {
-            turns: { ...turns, mean: turns.sum / this.#stats.length },
-            rewards: { ...rewards, mean: rewards.sum / this.#stats.length }
+            turns: turns,
+            rewards: rewards
         };
     }
 
