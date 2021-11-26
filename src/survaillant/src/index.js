@@ -7,6 +7,7 @@
 
 import fs from "fs";
 import * as tf from "@tensorflow/tfjs";
+import { GameStats } from "../../common/game/stats.js";
 
 process.on("SIGINT", () => { process.exit(); });
 
@@ -33,17 +34,38 @@ function loadData() {
 
 
 const Survaillant = {
-    getMaps: () => { return maps; },
-    createGame: (map) => { return new SurvaillantGame(map, "solo"); }
+    getMaps: () => {
+        return maps;
+    },
+    createGame: (map) => {
+        return new SurvaillantGame(map, "solo");
+    },
+    PlayerMoves: [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ],
+    ActionConsequence: {
+        MOVED: "MOVED",
+        BAD_MOVEMENT: "BAD_MOVEMENT",
+        GAME_OVER: "GAME_OVER"
+    }
 };
 
 // TODO: Doc
 class SurvaillantGame {
+    #stats;
+
     // TODO: Doc
     constructor(map) {
         this.game = new Game(map, "solo");
-        let dummyClient = { id: 0, account: null };
-        this.game.addPayer(dummyClient, "A furtive bot");
+        this.game.addPayer({ id: 0, account: null }, "A furtive bot");
+        this.#stats = new GameStats(this);
+    }
+
+    /**
+     * Get game's statistics
+     *
+     * @return {GameStats} Statistics
+     */
+    get stats() {
+        return this.#stats;
     }
 
     // TODO: Doc
@@ -122,18 +144,22 @@ class SurvaillantGame {
         let player = this.game.players[0];
 
         // Params check
-        if (dx === undefined || dy === undefined) throw "dx and dy requiered";
+        if (dx === undefined || dy === undefined) throw "dx and dy required";
 
         let choiceStatus = this.game.checkPlayerMovementChoice(player, { dx, dy });
-        if (choiceStatus.badMovement) return -1;
+        if (choiceStatus.badMovement) {
+            return this.#stats.gameOverReason = Survaillant.ActionConsequence.BAD_MOVEMENT;
+        }
 
         // Good movement
         if (this.game.allMvmtDone()) {
             this.game.nextTurn();
 
-            if (this.game.gameOver) return -2;
+            if (this.game.gameOver) {
+                return this.#stats.gameOverReason = Survaillant.ActionConsequence.GAME_OVER;
+            }
         }
-        return 0;
+        return Survaillant.ActionConsequence.MOVED;
     }
 
     // TODO: Doc
@@ -143,7 +169,7 @@ class SurvaillantGame {
         let player = this.game.player[0];
 
         if (item == undefined || !availableItems.includes(item))
-            throw "A correct Item is requiered";
+            throw "A correct Item is required";
 
         if (player.inventory[item] == 0) // The player has no item
             return -1;
@@ -151,11 +177,6 @@ class SurvaillantGame {
         // set item to the player
         player.selectedItem = item;
         player.nextMove = null;
-    }
-
-    // TODO: Doc
-    getScores() {
-        return this.game.getScores();
     }
 }
 

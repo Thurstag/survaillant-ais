@@ -90,14 +90,8 @@ for (let i = 0; i < 100; i++) {
     console.log("movement OK");
 }
 
-console.log("score : " + game.getScores().totalScore);
-console.log("Killed : " + game.getScores().nbKilledMonsters);
-// game.getScores() :
-//  nbKilledMonsters
-//  nbOpenedChests
-//  comboScore
-//  nbTurn
-//  totalScore
+console.log("score : " + game.stats.score);
+console.log("Killed : " + game.stats.killedMonsters);
 
 // reset game
 game = Survaillant.createGame(map);
