@@ -5,17 +5,17 @@
  * Refer to the LICENSE file included.
  */
 
-import { createSurvaillantDeepQNetwork } from './survaillant_deepq_network'
+import { createSurvaillantDeepQNetwork } from "./survaillant_deepq_network.js";
 
- /**
+/**
   * TODO
   */
- export class SurvaillantGameAgent {
+class SurvaillantGameAgent {
 
-    constructor(game, config) {
-        this.game = game;
-        this.model = createSurvaillantDeepQNetwork(config.height, config.width, config.actions);
-        this.modelTarget = createSurvaillantDeepQNetwork(config.height, config.width, config.actions);
+    constructor(height, width) {
+        this.model = createSurvaillantDeepQNetwork(height, width);
+        this.modelTarget = createSurvaillantDeepQNetwork(height, width);
+        this.model.summary();
     }
 
     /**
@@ -28,8 +28,8 @@ import { createSurvaillantDeepQNetwork } from './survaillant_deepq_network'
     /**
      * TODO 
      */
-    playStep() {
-
+    playStep(action) {
+        console.log(action);
     }
 
     /**
@@ -40,3 +40,5 @@ import { createSurvaillantDeepQNetwork } from './survaillant_deepq_network'
     }
 
 }
+
+export default SurvaillantGameAgent;

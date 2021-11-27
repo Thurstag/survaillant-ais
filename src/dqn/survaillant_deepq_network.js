@@ -5,7 +5,8 @@
  * Refer to the LICENSE file included.
  */
 
-import * as tf from '@tensorflow/tfjs';
+import * as tf from "@tensorflow/tfjs";
+import { LAYERS_COUNT as INPUT_LAYERS_COUNT } from "../common/states.js";
 
 /**
  * TODO
@@ -14,35 +15,34 @@ import * as tf from '@tensorflow/tfjs';
  * @param {*} width 
  * @param {*} actions 
  */
-export function createSurvaillantDeepQNetwork(height, width, actions) {
+export function createSurvaillantDeepQNetwork(height, width) {
 
-    const inputs = tf.input({shape: [1, height, width, 2]});
-
-    const layer1 = tf.layers.conv2d({
-        filters: 32,
-        kernelSize: 8,
-        strides: 4,
-        activation: 'relu',
-    }).apply(inputs);
-
-    const layer2 = tf.layers.conv2d({
-        filters: 64,
-        kernelSize: 4,
-        strides: 2,
-        activation: 'relu',
-    }).apply(layer1);
-
-    const layer3 = tf.layers.conv2d({
-        filters: 64,
+    const model = tf.sequential();
+    model.add(tf.layers.conv2d({
+        filters: 128,
         kernelSize: 3,
         strides: 1,
-        activation: 'relu',
-    }).apply(layer2);
+        activation: "relu",
+        inputShape: [ height, width, INPUT_LAYERS_COUNT ]
+    }));
+    model.add(tf.layers.batchNormalization());
+    model.add(tf.layers.conv2d({
+        filters: 256,
+        kernelSize: 3,
+        strides: 1,
+        activation: "relu"
+    }));
+    model.add(tf.layers.batchNormalization());
+    model.add(tf.layers.conv2d({
+        filters: 256,
+        kernelSize: 3,
+        strides: 1,
+        activation: "relu"
+    }));
+    model.add(tf.layers.flatten());
+    model.add(tf.layers.dense({ units: 100, activation: "relu" }));
+    model.add(tf.layers.dropout({ rate: 0.25 }));
+    model.add(tf.layers.dense({ units: 4 }));
 
-    const flattenLayer = tf.layers.flatten().apply(layer3);
-
-    const denseLayer = tf.layers.dense({units: 512, activation: 'relu'}).apply(flattenLayer);
-    const output = tf.layers.dense({units: actions, activation: 'linear'}).apply(denseLayer);
-
-    return tf.model({inputs: inputs, outputs: output});
+    return model;
 }
