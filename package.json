@@ -3,7 +3,7 @@
     "version": "0.0.0",
     "description": "A set of artificial intelligences playing Survaillant",
     "scripts": {
-        "example": "node dev/survaillant/example.js",
+        "example:random": "node dev/survaillant/random-player.js",
         "dqn:train": "node src/dqn/train.js",
         "ppo:train": "node src/ppo/train.js",
         "lint": "cross-env NODE_ENV=production eslint src/**/*.js",

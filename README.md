@@ -100,7 +100,7 @@ and spawning entities are on a level. For spawning entities, we represent them o
 
 - `lint`: a script used to perform code static analysis and code format check
 - `lint:fix`: a script used to fix formatting issues in code
-- `example`: a script used to run a simple game with random actions
+- `example:random`: a script used to run games with random actions
 
 Scripts related to network training are explained in Modules section.
 

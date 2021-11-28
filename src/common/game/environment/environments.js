@@ -18,7 +18,7 @@ class Environment {
     #stats = new GamesStats();
 
     /**
-     * Constructor
+     * Constructor for an uninitialized environment
      *
      * @param {MapRewardPolicy|ScoreDrivenPolicy} policy Reward policy
      * @param {StateGenerator} stateGenerator State generator

@@ -24,36 +24,35 @@ class GamesStats {
     /**
      * Generate a summary of statistics of stored games
      *
-     * @return {{rewards: {std: number, min: number, max: number, mean: number, sum: number}, turns: {std: number, min: number, max: number, mean: number, sum: number}}}
-     * Statistics about rewards obtained and number of turns reached
+     * @return {{
+     * rewards: {std: number, min: number, max: number, mean: number, sum: number},
+     * turns: {std: number, min: number, max: number, mean: number, sum: number},
+     * killed: {min: number, max: number, mean: number, sum: number},
+     * chests: {min: number, max: number, mean: number, sum: number},
+     * combo: {min: number, max: number, mean: number, sum: number},
+     * score: {min: number, max: number, mean: number, sum: number}
+     * }}
+     * Statistics about rewards obtained, number of turns reached, chests opened, score, combo score, and monsters killed
      */
     summary() {
-        let turns = {
-            min: 0,
-            max: 0,
-            sum: 0,
-            mean: 0,
-            std: 0
-        };
-        let rewards = {
-            min: 0,
-            max: 0,
-            sum: 0,
-            mean: 0,
-            std: 0
-        };
+        const turns = { min: 0, max: 0, sum: 0, mean: 0, std: 0 };
+        const rewards = { min: 0, max: 0, sum: 0, mean: 0, std: 0 };
+        const killed = { min: 0, max: 0, sum: 0, mean: 0 };
+        const chests = { min: 0, max: 0, sum: 0, mean: 0 };
+        const combo = { min: 0, max: 0, sum: 0, mean: 0 };
+        const score = { min: 0, max: 0, sum: 0, mean: 0 };
+        const statistics = { turns, rewards, killed, chests, combo, score };
 
         if (this.#stats.length === 0) {
-            return {
-                turns: turns,
-                rewards: rewards
-            };
+            return statistics;
         }
 
-        turns.min = Number.MAX_VALUE;
-        turns.max = Number.MIN_VALUE;
-        rewards.min = Number.MAX_VALUE;
-        rewards.max = Number.MIN_VALUE;
+        // Initialize max and min
+        for (const stats of Object.values(statistics)) {
+            stats.min = Number.POSITIVE_INFINITY;
+            stats.max = Number.NEGATIVE_INFINITY;
+        }
+
         for (const stats of this.#stats) {
             // Update turns stats
             const turnsCount = stats.turns;
@@ -66,11 +65,39 @@ class GamesStats {
             rewards.max = Math.max(rewards.max, rewardsSum);
             rewards.min = Math.min(rewards.min, rewardsSum);
             rewards.sum += rewardsSum;
+
+            // Update killed stats
+            const killedCount = stats.killedMonsters;
+            killed.max = Math.max(killed.max, killedCount);
+            killed.min = Math.min(killed.min, killedCount);
+            killed.sum += killedCount;
+
+            // Update chests stats
+            const openedChestsCount = stats.chests;
+            chests.max = Math.max(chests.max, openedChestsCount);
+            chests.min = Math.min(chests.min, openedChestsCount);
+            chests.sum += openedChestsCount;
+
+            // Update combo stats
+            const comboScore = stats.comboScore;
+            combo.max = Math.max(combo.max, comboScore);
+            combo.min = Math.min(combo.min, comboScore);
+            combo.sum += comboScore;
+
+            // Update score stats
+            const totalScore = stats.score;
+            score.max = Math.max(score.max, totalScore);
+            score.min = Math.min(score.min, totalScore);
+            score.sum += totalScore;
         }
 
+        // Update mean
         const invLength = 1 / this.#stats.length;
-        turns.mean = turns.sum * invLength;
-        rewards.mean = rewards.sum * invLength;
+        for (const stats of Object.values(statistics)) {
+            if (stats.sum) {
+                stats.mean = stats.sum * invLength;
+            }
+        }
 
         // Compute standard deviation
         for (const stats of this.#stats) {
@@ -80,10 +107,7 @@ class GamesStats {
         turns.std = Math.sqrt(invLength * turns.std);
         rewards.std = Math.sqrt(invLength * rewards.std);
 
-        return {
-            turns: turns,
-            rewards: rewards
-        };
+        return statistics;
     }
 
     /**
