@@ -64,13 +64,19 @@ Its identifier is `doom_slayer` in script arguments.
 A network takes in input a tensor, so we need to define a function to transform the game's state into a tensor. We have defined two
 representations of the map: flashlight mode, normal mode.
 
-TODO: Normal mode map image
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/map.jpg" 
+         style="display: block; margin: auto" alt="Game in normal mode">
+</p>
 
 In normal mode, the network takes in input the whole map and the map should be smaller or equal to 
 the input shape of the network. The main downside of this mode is that the network will have more issues to play on
 a map larger than the map used for training.
 
-TODO: Normal mode map image
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/flashlight_map.jpg" 
+         style="display: block; margin: auto" alt="Game in flashlight mode">
+</p>
 
 In flashlight mode, the network takes in input the surrounding of the player (e.g: only 8 squares around it if the radius is 1). 
 With this mode, the network can play on any map easily, but it has less information about further entities on the map.
