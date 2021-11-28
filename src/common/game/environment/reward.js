@@ -96,7 +96,7 @@ RewardPolicies.SCORE_BASED = class ScoreDrivenPolicy {
     reset() {
         this.#score = 0;
     }
-}
+};
 
 /**
  * Create a reward policy based on the given identifier

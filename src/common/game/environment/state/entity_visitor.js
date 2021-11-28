@@ -16,7 +16,7 @@ class EntityVisitor {
      * @param {None} none None
      * @return {*} Object
      */
-    acceptNone(none) {
+    acceptNone(none) { // eslint-disable-line no-unused-vars
         throw new Error("acceptNone isn't implemented");
     }
 
@@ -26,7 +26,7 @@ class EntityVisitor {
      * @param {Wall} wall Wall
      * @return {*} Object
      */
-    acceptWall(wall) {
+    acceptWall(wall) { // eslint-disable-line no-unused-vars
         throw new Error("acceptWall isn't implemented");
     }
 
@@ -36,7 +36,7 @@ class EntityVisitor {
      * @param {Player} player Player
      * @return {*} Object
      */
-    acceptPlayer(player) {
+    acceptPlayer(player) { // eslint-disable-line no-unused-vars
         throw new Error("acceptPlayer isn't implemented");
     }
 
@@ -46,7 +46,7 @@ class EntityVisitor {
      * @param {Chest} chest Chest
      * @return {*} Object
      */
-    acceptChest(chest) {
+    acceptChest(chest) { // eslint-disable-line no-unused-vars
         throw new Error("acceptChest isn't implemented");
     }
 
@@ -56,7 +56,7 @@ class EntityVisitor {
      * @param {Monster} monster Monster
      * @return {*} Object
      */
-    acceptMonster(monster) {
+    acceptMonster(monster) { // eslint-disable-line no-unused-vars
         throw new Error("acceptMonster isn't implemented");
     }
 
@@ -66,7 +66,7 @@ class EntityVisitor {
      * @param {Trap} trap Trap
      * @return {*} Object
      */
-    acceptTrap(trap) {
+    acceptTrap(trap) { // eslint-disable-line no-unused-vars
         throw new Error("acceptTrap isn't implemented");
     }
 
@@ -76,7 +76,7 @@ class EntityVisitor {
      * @param {MonsterSpawn} spawn Monster spawn
      * @return {*} Object
      */
-    acceptMonsterSpawn(spawn) {
+    acceptMonsterSpawn(spawn) { // eslint-disable-line no-unused-vars
         throw new Error("acceptMonsterSpawn isn't implemented");
     }
 }
@@ -91,7 +91,7 @@ class Visitable {
      * @param {EntityVisitor} visitor Visitor
      * @return {*} Object returned by the callback
      */
-    visit(visitor) {
+    visit(visitor) { // eslint-disable-line no-unused-vars
         throw new Error("visit isn't implemented");
     }
 }
@@ -106,7 +106,7 @@ class VisitableEntity extends Entity {
      * @param {EntityVisitor} visitor Visitor
      * @return {*} Object returned by the callback
      */
-    visit(visitor) {
+    visit(visitor) { // eslint-disable-line no-unused-vars
         throw new Error("visit isn't implemented");
     }
 }

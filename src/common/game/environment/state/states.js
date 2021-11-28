@@ -27,7 +27,7 @@ class StateGenerator {
      * @param {SurvaillantGame} game Game
      * @return {Tensor} Game's state
      */
-    state(game) {
+    state(game) { // eslint-disable-line no-unused-vars
         throw new Error("state isn't implemented");
     }
 
@@ -188,7 +188,7 @@ class FlashlightStateGenerator extends StateGenerator {
             if (x >= minX && x < maxX && y >= minY && y < maxY) {
                 state.set(value, toLocalX(x), toLocalY(y), layer);
             }
-        }
+        };
 
         // Iterate over entities and define them in tensor
         game.forEach(markVisibleEntity);

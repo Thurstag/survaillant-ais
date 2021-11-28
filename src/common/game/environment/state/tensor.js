@@ -64,15 +64,15 @@ class SummaryEntityValue extends EntityVisitor {
     static #CHEST = [ 2, 6, 7, 8, 9, 10, 11 ];
     static #MONSTER_SPAWN = [ 12, 13, 14, 15 ];
 
-    acceptNone(_) {
+    acceptNone(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptWall(_) {
+    acceptWall(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
-    acceptPlayer(_) {
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
@@ -80,7 +80,7 @@ class SummaryEntityValue extends EntityVisitor {
         return SummaryEntityValue.#CHEST[chest.timeBeforeSpawn];
     }
 
-    acceptMonster(_) {
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
         return 2;
     }
 
@@ -99,31 +99,31 @@ class SummaryEntityValue extends EntityVisitor {
 class SummaryEntityLayer extends EntityVisitor {
     layers = 2;
 
-    acceptNone(_) {
+    acceptNone(_) { // eslint-disable-line no-unused-vars
         return NO_LAYER;
     }
 
-    acceptWall(_) {
+    acceptWall(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptPlayer(player) {
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
-    acceptChest(chest) {
+    acceptChest(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptMonster(monster) {
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
-    acceptTrap(trap) {
+    acceptTrap(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptMonsterSpawn(spawn) {
+    acceptMonsterSpawn(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 }
@@ -136,15 +136,15 @@ class ExhaustiveEntityValue extends EntityVisitor {
     static TRAP = [ undefined, 1, undefined ];
     static MONSTER_SPAWN = [ undefined, 1, undefined, undefined ];
 
-    acceptNone(_) {
+    acceptNone(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptWall(_) {
+    acceptWall(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
-    acceptPlayer(_) {
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
@@ -152,7 +152,7 @@ class ExhaustiveEntityValue extends EntityVisitor {
         return ExhaustiveEntityValue.CHEST[chest.timeBeforeSpawn];
     }
 
-    acceptMonster(_) {
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
@@ -176,15 +176,15 @@ class ExhaustiveEntityLayer extends EntityVisitor {
 
     layers = 5;
 
-    acceptNone(ground) {
+    acceptNone(_) { // eslint-disable-line no-unused-vars
         return NO_LAYER;
     }
 
-    acceptWall(wall) {
+    acceptWall(_) { // eslint-disable-line no-unused-vars
         return 0;
     }
 
-    acceptPlayer(player) {
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
         return 1;
     }
 
@@ -192,7 +192,7 @@ class ExhaustiveEntityLayer extends EntityVisitor {
         return chest.dead ? ExhaustiveEntityLayer.#SPAWNING_CHEST[chest.timeBeforeSpawn] : 2;
     }
 
-    acceptMonster(monster) {
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
         return 3;
     }
 
