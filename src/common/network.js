@@ -6,6 +6,7 @@
  */
 import tf from "@tensorflow/tfjs";
 import Survaillant from "../survaillant/src/index.js";
+import LOGGER from "./logger.js";
 
 /**
  * Base class for networks, implementing common methods like summary, gradients application...
@@ -52,7 +53,7 @@ class SurvaillantNetwork {
      */
     printSummary() {
         for (const [ name, { network } ] of Object.entries(this.#networks)) {
-            console.log(`${name} network: `);
+            LOGGER.info(`${name} network:`);
             network.summary();
         }
     }

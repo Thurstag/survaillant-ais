@@ -16,7 +16,8 @@
         "argparse": "^2.0.1",
         "pathfinding": "^0.4.18",
         "uuid": "^8.3.2",
-        "timeunit": "^1.1.1"
+        "timeunit": "^1.1.1",
+        "winston": "^3.3.3"
     },
     "devDependencies": {
         "cross-env": "^7.0.3",
