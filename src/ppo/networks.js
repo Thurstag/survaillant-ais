@@ -7,6 +7,7 @@
 import tf from "@tensorflow/tfjs";
 import SurvaillantNetwork from "../common/network.js";
 import keras from "../common/tensorflow/keras.js";
+import Hyperparameters from "./hyperparameters.js";
 
 const ACTOR_NAME = "actor";
 const CRITIC_NAME = "critic";
@@ -111,7 +112,7 @@ function feedforward(units, input, intermediateActivation) {
  * @param {number} criticLearningRate Critic network learning rate with Adam optimizer
  * @return {PpoTrainingNetwork} Network
  */
-function random(x, y, z, units, actorLearningRate, criticLearningRate) {
+function random(x, y, z, units = Hyperparameters.HIDDEN_LAYER_UNITS, actorLearningRate = Hyperparameters.POLICY_LEARNING_RATE, criticLearningRate = Hyperparameters.VALUE_FUNCTION_LEARNING_RATE) {
     const input = tf.input({ shape: [ x, y, z ] });
     const flattenInput = tf.layers.flatten().apply(input);
 
