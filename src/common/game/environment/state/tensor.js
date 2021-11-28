@@ -14,16 +14,19 @@ const NO_LAYER = -1;
 class TensorEntitiesRepresentation {
     #layerConverter;
     #valueConverter;
+    #name;
 
     /**
      * Constructor
      *
      * @param {EntityVisitor} layerConverter Entity to layer converter
      * @param {EntityVisitor} valueConverter Entity to value converter
+     * @param {String} name Representation's name
      */
-    constructor(layerConverter, valueConverter) {
+    constructor(layerConverter, valueConverter, name) {
         this.#layerConverter = layerConverter;
         this.#valueConverter = valueConverter;
+        this.#name = name;
     }
 
     /**
@@ -33,6 +36,15 @@ class TensorEntitiesRepresentation {
      */
     get layers() {
         return this.#layerConverter.layers;
+    }
+
+    /**
+     * Get its name
+     *
+     * @return {String} Name
+     */
+    get name() {
+        return this.#name;
     }
 
     /**
@@ -206,8 +218,8 @@ class ExhaustiveEntityLayer extends EntityVisitor {
 }
 
 const EntitiesRepresentation = {
-    SUMMARY: new TensorEntitiesRepresentation(new SummaryEntityLayer(), new SummaryEntityValue()),
-    EXHAUSTIVE: new TensorEntitiesRepresentation(new ExhaustiveEntityLayer(), new ExhaustiveEntityValue())
+    SUMMARY: new TensorEntitiesRepresentation(new SummaryEntityLayer(), new SummaryEntityValue(), "summary"),
+    EXHAUSTIVE: new TensorEntitiesRepresentation(new ExhaustiveEntityLayer(), new ExhaustiveEntityValue(), "exhaustive")
 };
 
 export { EntitiesRepresentation, NO_LAYER };

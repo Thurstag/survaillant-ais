@@ -12,9 +12,9 @@ import { MapRewardPolicy } from "./reward.js";
  * Training environment
  */
 class Environment {
-    #policy;
+    policy;
     #game;
-    #stateGenerator;
+    stateGenerator;
     #stats = new GamesStats();
 
     /**
@@ -24,8 +24,8 @@ class Environment {
      * @param {StateGenerator} stateGenerator State generator
      */
     constructor(policy, stateGenerator) {
-        this.#policy = policy;
-        this.#stateGenerator = stateGenerator;
+        this.policy = policy;
+        this.stateGenerator = stateGenerator;
     }
 
     /**
@@ -43,7 +43,7 @@ class Environment {
      * @return {{x: number, y: number, z: number}} Dimension on all axes
      */
     get stateShape() {
-        return this.#stateGenerator.shape();
+        return this.stateGenerator.shape();
     }
 
     /**
@@ -60,7 +60,7 @@ class Environment {
      */
     reset() {
         this.#game = this.createGame();
-        this.#policy.reset();
+        this.policy.reset();
     }
 
     /**
@@ -78,7 +78,7 @@ class Environment {
      * @return {Tensor} State
      */
     state() {
-        return this.#stateGenerator.state(this.#game);
+        return this.stateGenerator.state(this.#game);
     }
 
     /**
@@ -93,7 +93,7 @@ class Environment {
         const consequence = this.#game.movePlayer(direction[0], direction[1]);
 
         // Deduce reward/done
-        const { reward, done } = this.#policy instanceof MapRewardPolicy ? this.#policy.get(consequence) : this.#policy.get(consequence, this.#game);
+        const { reward, done } = this.policy instanceof MapRewardPolicy ? this.policy.get(consequence) : this.policy.get(consequence, this.#game);
 
         // Add reward to env/game stats
         this.#game.stats.addReward(reward);
@@ -102,6 +102,15 @@ class Environment {
         }
 
         return { reward, done };
+    }
+
+    /**
+     * Get its identifier
+     *
+     * @return {string} Id
+     */
+    id() {
+        throw new Error("id isn't implemented");
     }
 }
 
@@ -126,6 +135,10 @@ class SingleMapEnvironment extends Environment {
 
     createGame() {
         return Survaillant.createGame(this.#map);
+    }
+
+    id() {
+        return `single[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}`;
     }
 }
 

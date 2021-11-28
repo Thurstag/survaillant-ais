@@ -29,14 +29,26 @@ DOOM_SLAYER_POLICY[Survaillant.ActionConsequence.KILL] = { reward: 5, done: fals
  */
 class MapRewardPolicy {
     #_policy;
+    #name;
 
     /**
      * Constructor
      *
      * @param {Object.<String, {reward: number, done: false}>} policy Map that defines the reward for each consequence
+     * @param {String} name Policy's name
      */
-    constructor(policy) {
+    constructor(policy, name) {
         this.#_policy = policy;
+        this.#name = name;
+    }
+
+    /**
+     * Get its name
+     *
+     * @return {String} Name
+     */
+    get name() {
+        return this.#name;
     }
 
     /**
@@ -60,17 +72,27 @@ class MapRewardPolicy {
 const RewardPolicies = {};
 
 /** Policy that neglects bad movements */
-RewardPolicies.BANDIT = new MapRewardPolicy(BANDIT_POLICY);
+RewardPolicies.BANDIT = new MapRewardPolicy(BANDIT_POLICY, "bandit");
 
 /** Policy that ensures that all rules are respected */
-RewardPolicies.NEUTRAL = new MapRewardPolicy(NEUTRAL_POLICY);
+RewardPolicies.NEUTRAL = new MapRewardPolicy(NEUTRAL_POLICY, "neutral");
 
 /** Policy based on {@link NEUTRAL} that promotes kills */
-RewardPolicies.DOOM_SLAYER = new MapRewardPolicy(DOOM_SLAYER_POLICY);
+RewardPolicies.DOOM_SLAYER = new MapRewardPolicy(DOOM_SLAYER_POLICY, "doom_slayer");
 
 /** Policy based on {@link NEUTRAL} that uses the in-game score to reward the player */
 RewardPolicies.SCORE_BASED = class ScoreDrivenPolicy {
+    static #NAME = "score_based";
     #score = 0;
+
+    /**
+     * Get its name
+     *
+     * @return {string} Name
+     */
+    get name() {
+        return ScoreDrivenPolicy.#NAME;
+    }
 
     /**
      * Get the reward/done status for the given consequence

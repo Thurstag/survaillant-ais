@@ -39,6 +39,15 @@ class StateGenerator {
     shape() {
         throw new Error("shape isn't implemented");
     }
+
+    /**
+     * Get its identifier
+     *
+     * @return {string} Id
+     */
+    id() {
+        throw new Error("id isn't implemented");
+    }
 }
 
 /**
@@ -60,6 +69,10 @@ class NormalStateGenerator extends StateGenerator {
 
         this.#stateDimX = x;
         this.#stateDimY = y;
+    }
+
+    id() {
+        return `normal[${this.#stateDimX}x${this.#stateDimY}, ${this.tensorInfo.name}]`;
     }
 
     shape() {
@@ -127,6 +140,10 @@ class FlashlightStateGenerator extends StateGenerator {
 
         this.#radius = radius;
         this.#stateDim = this.#radius * 2 + 1;
+    }
+
+    id() {
+        return `flashlight[${this.#radius}, ${this.tensorInfo.name}]`;
     }
 
     shape() {
