@@ -29,4 +29,14 @@ function dense(args) {
     return tf.layers.dense({ ...{ useBias: true, kernelInitializer: "glorotUniform", biasInitializer: "zeros" }, ...args });
 }
 
-export default { adam, dense };
+/**
+ * Create a 2D convolution layer
+ *
+ * @param {ConvLayerArgs} args Layer's arguments
+ * @return {Layer} Layer
+ */
+function conv2d(args) {
+    return tf.layers.conv2d({ ...{ strides: [ 1, 1 ], padding: "valid", dilationRate: [ 1, 1 ], kernelInitializer: "glorotUniform", biasInitializer: "zeros" }, ...args });
+}
+
+export default { adam, dense, conv2d };
