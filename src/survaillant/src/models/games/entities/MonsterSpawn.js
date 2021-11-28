@@ -4,9 +4,11 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import { Visitable } from "../../../../../common/game/environment/state/entity_visitor.js";
 
-class MonsterSpawn {
+class MonsterSpawn extends Visitable {
     constructor(pos) {
+        super();
         this.pos = pos;
 
         this.spawnTime = 3;
@@ -39,6 +41,10 @@ class MonsterSpawn {
             }
         }
         return false;
+    }
+
+    visit(visitor) {
+        return visitor.acceptMonsterSpawn(this);
     }
 }
 export default MonsterSpawn;

@@ -16,6 +16,9 @@ const CRITIC_NAME = "critic";
  * Critic network returns a scalar and actor network returns a 1D tensor with 4 values.
  */
 class PpoTrainingNetwork extends SurvaillantNetwork {
+    /** Number of outputs for critic network */
+    static CRITIC_OUTPUTS_COUNT = 1;
+
     /**
      * Constructor
      *
@@ -78,15 +81,6 @@ class PpoTrainingNetwork extends SurvaillantNetwork {
      */
     trainCritic(loss) {
         this.train(CRITIC_NAME, loss);
-    }
-
-    /**
-     * Number of outputs for critic network
-     *
-     * @return {number} Number of outputs
-     */
-    static get CRITIC_OUTPUTS_COUNT() {
-        return 1;
     }
 }
 

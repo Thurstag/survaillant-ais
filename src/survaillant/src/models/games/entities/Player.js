@@ -5,10 +5,10 @@
  * Refer to the LICENSE file included.
  */
 
-import Entity from "../Entity.js";
+import { VisitableEntity } from "../../../../../common/game/environment/state/entity_visitor.js";
 import { v4 as uuidv4 } from "uuid";
 
-class Player extends Entity {
+class Player extends VisitableEntity {
     constructor(client, playerName, pos, team, avatar) {
         super(client.name, pos);
         this.client = client;
@@ -47,6 +47,10 @@ class Player extends Entity {
             animationLoop: this.animationLoop,
             inventory: this.inventory,
         };
+    }
+
+    visit(visitor) {
+        return visitor.acceptPlayer(this);
     }
 }
 

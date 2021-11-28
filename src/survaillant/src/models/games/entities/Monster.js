@@ -5,9 +5,9 @@
  * Refer to the LICENSE file included.
  */
 
-import Entity from "../Entity.js";
+import { VisitableEntity } from "../../../../../common/game/environment/state/entity_visitor.js";
 
-class Monster extends Entity {
+class Monster extends VisitableEntity {
     constructor(name, pos) {
         super(name, pos);
         this.nextMove = null;
@@ -19,6 +19,7 @@ class Monster extends Entity {
         this.animationLoop = 0;
         this.hitPoint = 1;
     }
+
     get() {
         return {
             ...super.get(),
@@ -27,11 +28,17 @@ class Monster extends Entity {
             animationLoop: this.animationLoop,
         };
     }
+
     hit() {
         this.hitPoint -= 1;
-        if (this.hitPoint == 0) {
+        if (this.hitPoint === 0) {
             this.dead = true;
         }
     }
+
+    visit(visitor) {
+        return visitor.acceptMonster(this);
+    }
 }
+
 export default Monster;

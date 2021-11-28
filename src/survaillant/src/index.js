@@ -4,21 +4,20 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
-
 import fs from "fs";
-import * as tf from "@tensorflow/tfjs";
 import { GameStats } from "../../common/game/stats.js";
-
-process.on("SIGINT", () => { process.exit(); });
-
-// Models
-import Map from "./models/games/Map.js";
 import Game from "./models/games/Game.js";
+import Map from "./models/games/Map.js";
+
+process.on("SIGINT", () => {
+    process.exit();
+});
 
 // ======== data ========
 let maps = [];
 
 // Init
+// TODO: Remove this because it slows down scripts and scripts should have a parameter to select a map
 loadData();
 
 function loadData() {
@@ -44,7 +43,8 @@ const Survaillant = {
     ActionConsequence: {
         MOVED: "MOVED",
         BAD_MOVEMENT: "BAD_MOVEMENT",
-        GAME_OVER: "GAME_OVER"
+        GAME_OVER: "GAME_OVER",
+        KILL: "KILL"
     }
 };
 
@@ -69,74 +69,23 @@ class SurvaillantGame {
     }
 
     // TODO: Doc
-    getState() { return this.game.get(); }
+    getState() {
+        return this.game.get();
+    }
 
-    // TODO: Doc
-    getStateAsTensor(w, h) {
-        let state = this.game.get();
+    /**
+     * Iterate over game's entities and call the given callback when an entity is encountered
+     *
+     * @param {function(Entity|MonsterSpawn)} onEntity
+     */
+    forEach(onEntity) {
+        let gameInstance = this.game;
 
-        // Ground :           0
-        // Wall :             1
-        // Chest :            2
-        // Trap positon 0 :   3
-        // Trap positon 1 :   4
-        // Trap positon 2 :   5
-        // Monster spawn 0 :  6
-        // Monster spawn 1 :  7
-        // Monster spawn 2 :  8
-        // Monster spawn 3 :  9
-
-        // Vide :             0
-        // Player :           1
-        // Monster :          2
-
-        const buffer = tf.buffer([ 1, h, w, 2 ]);
-        const DUNGEON = 0;
-        const ENTITY = 1;
-
-        // Init buffers with default values
-        for (let i = 0; i < h; i++)
-            for (let j = 0; j < w; j++)
-                buffer.set(1, 0, i, j, DUNGEON);
-
-
-        for (let i = 0; i < h; i++)
-            for (let j = 0; j < w; j++)
-                buffer.set(0, 0, i, j, ENTITY);
-
-        // floor
-        let wLimit = Math.min(state.map.board.dimX, w);
-        let hLimit = Math.min(state.map.board.dimY, h);
-        for (let i = 0; i < wLimit; i++)
-            for (let j = 0; j < hLimit; j++)
-                if (state.map.floor[i][j] === 1)
-                    buffer.set(0, 0, i, j, DUNGEON);
-
-        // chests
-        state.chests.forEach(chest => {
-            buffer.set(2, 0, chest.pos.x, chest.pos.y, DUNGEON);
-        });
-        // Traps
-        state.traps.forEach(trap => {
-            buffer.set(trap.loop + 3, 0, trap.pos.x, trap.pos.y, DUNGEON);
-        });
-        // Spawn
-        state.monsterSpawns.forEach(monsterSpawn => {
-            if(monsterSpawn.monsterSpawning)
-                buffer.set(9 - monsterSpawn.timeBeforeSpawn, 0, monsterSpawn.pos.x, monsterSpawn.pos.y, DUNGEON);
-        });
-
-        // Entities
-        // Player
-        let playerPos = state.players[0].pos;
-        buffer.set(1, 0, playerPos.x, playerPos.y, ENTITY);
-
-        // Monsters
-        state.monsters.forEach(monster => {
-            buffer.set(2, 0, monster.pos.x, monster.pos.y, ENTITY);
-        });
-
-        return buffer.toTensor();
+        gameInstance.monsters.forEach(onEntity);
+        gameInstance.chests.forEach(onEntity);
+        gameInstance.traps.forEach(onEntity);
+        gameInstance.monsterSpawns.forEach(onEntity);
+        gameInstance.players.forEach(onEntity);
     }
 
     // TODO: Doc
@@ -152,6 +101,7 @@ class SurvaillantGame {
         }
 
         // Good movement
+        const oldKillCount = this.game.nbKilledMonsters;
         if (this.game.allMvmtDone()) {
             this.game.nextTurn();
 
@@ -159,7 +109,8 @@ class SurvaillantGame {
                 return this.#stats.gameOverReason = Survaillant.ActionConsequence.GAME_OVER;
             }
         }
-        return Survaillant.ActionConsequence.MOVED;
+
+        return this.game.nbKilledMonsters > oldKillCount ? Survaillant.ActionConsequence.KILL : Survaillant.ActionConsequence.MOVED;
     }
 
     // TODO: Doc

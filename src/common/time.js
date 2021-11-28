@@ -10,15 +10,8 @@ import TimeUnit from "timeunit";
  * Recorder of operations
  */
 class OperationsRecorder {
-    #operations;
+    #operations = [];
     #start;
-
-    /**
-     * Constructor
-     */
-    constructor() {
-        this.#operations = [];
-    }
 
     /**
      * Declare the start of an operation

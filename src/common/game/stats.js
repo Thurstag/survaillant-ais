@@ -10,14 +10,7 @@ import Survaillant from "../../survaillant/src/index.js";
  * Statistics of multiple games
  */
 class GamesStats {
-    #stats;
-
-    /**
-     * Constructor
-     */
-    constructor() {
-        this.#stats = [];
-    }
+    #stats = [];
 
     /**
      * Add the given game's statistics
@@ -36,20 +29,31 @@ class GamesStats {
      */
     summary() {
         let turns = {
-            min: Number.MAX_VALUE,
-            max: Number.MIN_VALUE,
+            min: 0,
+            max: 0,
             sum: 0,
             mean: 0,
             std: 0
         };
         let rewards = {
-            min: Number.MAX_VALUE,
-            max: Number.MIN_VALUE,
+            min: 0,
+            max: 0,
             sum: 0,
             mean: 0,
             std: 0
         };
 
+        if (this.#stats.length === 0) {
+            return {
+                turns: turns,
+                rewards: rewards
+            };
+        }
+
+        turns.min = Number.MAX_VALUE;
+        turns.max = Number.MIN_VALUE;
+        rewards.min = Number.MAX_VALUE;
+        rewards.max = Number.MIN_VALUE;
         for (const stats of this.#stats) {
             // Update turns stats
             const turnsCount = stats.turns;

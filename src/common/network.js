@@ -11,6 +11,9 @@ import Survaillant from "../survaillant/src/index.js";
  * Base class for networks, implementing common methods like summary, gradients application...
  */
 class SurvaillantNetwork {
+    /** Number of possible actions that a player can do */
+    static ACTIONS_COUNT = Survaillant.PlayerMoves.length;
+
     #networks;
 
     /**
@@ -52,15 +55,6 @@ class SurvaillantNetwork {
             console.log(`${name} network: `);
             network.summary();
         }
-    }
-
-    /**
-     * Number of possible actions
-     *
-     * @return {number} Actions
-     */
-    static get ACTIONS_COUNT() {
-        return Survaillant.PlayerMoves.length;
     }
 }
 
