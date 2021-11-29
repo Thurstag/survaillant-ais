@@ -117,7 +117,7 @@ class GamesStats {
      * @return {string} CSV with the following columns: mapName, score, nbTurn, nbKilled, nbChests, comboScore, gameOverReason
      */
     toCSV() {
-        return `mapName, score, nbTurn, nbKilled, nbChests, comboScore, gameOverReason\n${this.#stats.map(s => s.toCSV()).join("\n")}`;
+        return `mapName,score,nbTurn,nbKilled,nbChests,comboScore,gameOverReason\n${this.#stats.map(s => s.toCSV()).join("\n")}`;
     }
 
     /**
@@ -245,12 +245,12 @@ class GameStats {
     }
 
     /**
-     * Convert stored statistics into a CSV line defining values for the following columns: mapName, score, nbTurn, nbKilled, nbChests, comboScore, gameOverReason
+     * Convert stored statistics into a CSV line defining values for the following columns: mapName,score,nbTurn,nbKilled,nbChests,comboScore,gameOverReason
      *
      * @return {string} CSV line
      */
     toCSV() {
-        return `${this.mapName}, ${this.score}, ${this.turns}, ${this.killedMonsters}, ${this.chests}, ${this.comboScore}, ${this.gameOverReason}`;
+        return `${this.mapName},${this.score},${this.turns},${this.killedMonsters},${this.chests},${this.comboScore},${this.gameOverReason}`;
     }
 }
 
