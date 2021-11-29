@@ -4,7 +4,6 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
-import { expect } from "chai";
 import fs from "fs/promises";
 import { before, beforeEach, describe, it } from "mocha";
 import path from "path";
@@ -21,6 +20,7 @@ import { PpoAgent } from "../../src/ppo/agent.js";
 import { PpoHyperparameter } from "../../src/ppo/hyperparameters.js";
 import { POLICY_NETWORK_NAME as PPO_POLICY_NETWORK_NAME, VALUE_NETWORK_NAME as PPO_VALUE_NETWORK_NAME } from "../../src/ppo/networks.js";
 import { Argument as PpoArgument, train as trainPpo } from "../../src/ppo/train.js";
+import chai from "../utils/chai.js";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const TMP_DIRECTORY = path.join(__dirname, "tmp");
@@ -35,22 +35,22 @@ const EPOCHS = 2;
 
 async function assertNetworkFiles(folder, agent, epochs, policy, state, representation) {
     // Assert exported files
-    expect(folder).to.be.a.directory().with
+    chai.expect(folder).to.be.a.directory().with
         .files([ SurvaillantNetwork.TRAINING_INFO_FILENAME, SurvaillantNetwork.MODEL_FILENAME, "weights.bin" ]);
 
     // Assert training information
     const trainingInfo = JSON.parse(await fs.readFile(path.join(folder, SurvaillantNetwork.TRAINING_INFO_FILENAME)));
-    expect(trainingInfo[TrainingInformationKey.AGENT]).to.equal(agent);
-    expect(trainingInfo[TrainingInformationKey.EPOCHS]).to.equal(epochs);
-    expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.POLICY])
+    chai.expect(trainingInfo[TrainingInformationKey.AGENT]).to.equal(agent);
+    chai.expect(trainingInfo[TrainingInformationKey.EPOCHS]).to.equal(epochs);
+    chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.POLICY])
         .to.equal(policy);
-    expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.TYPE])
+    chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.TYPE])
         .to.equal(SingleMapEnvironment.ID);
-    expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.MAPS])
+    chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.MAPS])
         .to.have.lengthOf(1);
-    expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE])
+    chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE])
         .to.equal(state);
-    expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION])
+    chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION])
         .to.equal(representation);
 }
 
