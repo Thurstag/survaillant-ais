@@ -11,11 +11,15 @@
 # Game
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/Survaillant.png"
-         style="display: block; margin: auto" alt="Game in normal mode">
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/game_readme/.github/images/Survaillant.png"
+         style="display: block; margin: auto" alt="Survaillant">
 </p>
 
+Survaillant is a reflexion and strategy game playable in solo, PVP or COOP. The goal is to stay alive as long as possible in a dungeon where monsters move only when you move.
 
+Survaillant is very inspired by the mobile game <a href="https://play.google.com/store/apps/details?id=com.nitrome.rustbucket&hl=fr&gl=US">Rust Bucket</a>, but implement some unique multi-player features, and it is web hosted, you can play it <a href="http://tomansion.fr:8081">HERE</a>.
+
+For this project, we are focussing on creating an AI that can play the game using reinforcement neural networks.
 
 # Network
 
