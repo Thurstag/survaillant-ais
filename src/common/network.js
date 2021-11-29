@@ -14,6 +14,8 @@ import LOGGER from "./logger.js";
 class SurvaillantNetwork {
     /** Number of possible actions that a player can do */
     static ACTIONS_COUNT = Survaillant.PlayerMoves.length;
+    static SAVED_MODEL_EXTENSION = ".sm";
+    static MODEL_FILENAME = "model.json";
 
     #networks;
 
@@ -55,6 +57,20 @@ class SurvaillantNetwork {
         for (const [ name, { network } ] of Object.entries(this.#networks)) {
             LOGGER.info(`${name} network:`);
             network.summary();
+        }
+    }
+
+    /**
+     * Save networks
+     *
+     * @param {function(String): String} fileSupplier Function returning the location where the given network will be saved (argument: network's name)
+     * @return {Promise<void>} Promise
+     */
+    async saveTo(fileSupplier) {
+        for (const [ name, { network } ] of Object.entries(this.#networks)) {
+            await network.save(fileSupplier(name), {
+                includeOptimizer: true
+            });
         }
     }
 }

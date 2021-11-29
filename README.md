@@ -35,7 +35,7 @@ Indeed, we have to reward the AI for each decision that it makes. We define 4 co
 - Game over (the decision leads to a game over)
 - Kill (the decision will kill a monster)
 
-We have defined 4 policies: the bandit, neutral, score-based, and doom slayer policies.
+We have defined 4 policies: the bandit, neutral, score-based, and doom slayer.
 
 ### Bandit
 
@@ -94,7 +94,7 @@ and its states are represented with a unique value.
 ### Exhaustive
 
 In exhaustive mode, walls are on a level, players are on a level, monsters are on a level,
-and spawning entities are on a level. For spawning entities, we represent them only if they would kill the player on spawn.
+and spawning entities are on a level. For spawning entities, they aren't represented unless they would kill the player if he steps on them.
 
 # NPM Scripts
 
@@ -115,6 +115,16 @@ A module defining a network that plays the game using a Deep Q Learning model. Y
 npm run dqn:train
 ```
 Please refer to the documentation of the script for more information about its parameters (cmd: `npm run dqn:train -- -h`).
+
+## ppo (Proximal Policy Optimization)
+
+A module defining a network that plays the game using a Proximal Policy Optimization model. You can train a network with:
+```
+npm run ppo:train
+```
+Please refer to the documentation of the script for more information about its parameters (cmd: `npm run ppo:train -- -h`).
+
+You can either train networks created from scratch or existing ones.
 
 # Requirements
 

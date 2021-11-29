@@ -11,12 +11,12 @@ import LOGGER from "../common/logger.js";
 import SurvaillantNetwork from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
-import Hyperparameters from "./hyperparameters.js";
+import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
 
 /**
  * Compute the log-probabilities of taking actions a by using the logits
  *
- * @param {Tensor} logits Actor output prediction
+ * @param {Tensor} logits Policy output prediction
  * @param {Tensor} action Action to take
  * @return {Tensor} Log-probabilities
  */
@@ -66,7 +66,7 @@ class TrajectoriesBuffer {
      * @param {Tensor} observation State of the map
      * @param {Tensor} action Action done
      * @param {number} reward Reward obtained
-     * @param {number} value Critic network's output
+     * @param {number} value Value network's output
      * @param {Tensor} logProbability Log-probabilities of taking actions
      */
     store(observation, action, reward, value, logProbability) {
@@ -81,7 +81,7 @@ class TrajectoriesBuffer {
     /**
      * Compute advantage estimates and rewards-to-go
      *
-     * @param {number} lastValue Last critic's output
+     * @param {number} lastValue Last value's output
      */
     finishTrajectory(lastValue) {
         const rewardBuffer = this.rewardBuffer.slice(this.trajectoryStartIndex, this.pointer);
@@ -149,7 +149,7 @@ class PpoAgent {
      * @param {number} gamma Gamma
      * @param {number} lam Lam
      */
-    constructor(epochs, stepsPerEpoch = Hyperparameters.STEPS_PER_EPOCH, policyTrainingIterations = Hyperparameters.TRAIN_POLICY_ITERATIONS, valueTrainingIterations = Hyperparameters.TRAIN_VALUE_FUNCTION_ITERATIONS, targetKl = Hyperparameters.TARGET_KL, clipRatio = Hyperparameters.CLIP_RATIO, gamma = Hyperparameters.GAMMA, lam = Hyperparameters.LAM) {
+    constructor(epochs, stepsPerEpoch = DefaultHyperparameter.STEPS_PER_EPOCH, policyTrainingIterations = DefaultHyperparameter.TRAIN_POLICY_ITERATIONS, valueTrainingIterations = DefaultHyperparameter.TRAIN_VALUE_ITERATIONS, targetKl = DefaultHyperparameter.TARGET_KL, clipRatio = DefaultHyperparameter.CLIP_RATIO, gamma = DefaultHyperparameter.GAMMA, lam = DefaultHyperparameter.LAM) {
         this.#epochs = epochs;
         this.#stepsPerEpoch = stepsPerEpoch;
         this.#policyTrainingIterations = policyTrainingIterations;
@@ -165,9 +165,10 @@ class PpoAgent {
      *
      * @param {PpoTrainingNetwork} network Network to train
      * @param {Environment} env Training environment to use
-     * @return {String} Training identifier
+     * @param {function(number, PpoTrainingNetwork)} onEpoch Callback called at the end of each epoch (arguments: current epoch, network)
+     * @return {Promise<String>} Training identifier
      */
-    train(network, env) {
+    async train(network, env, onEpoch) {
         for (let epoch = 0; epoch < this.#epochs; epoch++) {
             tf.tidy(() => {
                 // Create history buffer
@@ -179,6 +180,8 @@ class PpoAgent {
                 // Train network
                 this.#trainOnBuffer(network, buffer, epoch);
             });
+
+            await onEpoch(epoch, network);
         }
 
         return `PPO_${this.#epochs}_${env.id()}`;
@@ -221,7 +224,7 @@ class PpoAgent {
 
             // Finish trajectory if a terminal state is reached
             if (done || step === this.#stepsPerEpoch - 1) {
-                const lastValue = done ? 0 : network.critic(newObservation).dataSync()[0];
+                const lastValue = done ? 0 : network.value(newObservation).dataSync()[0];
                 buffer.finishTrajectory(lastValue);
 
                 // Add stats
@@ -268,7 +271,7 @@ class PpoAgent {
             opsRecorder.start();
 
             const kl = tf.tidy(() => {
-                network.trainActor(() => {
+                network.trainPolicy(() => {
                     const ratio = logProbabilities(network.actions(observations), actions).sub(logprobabilities).exp();
 
                     return minAdvantage.minimum(ratio.mul(advantages)).mean().neg();
@@ -289,7 +292,7 @@ class PpoAgent {
         for (let i = 0; i < this.#valueTrainingIterations; i++) {
             opsRecorder.start();
 
-            tf.tidy(() => network.trainCritic(() => tf.losses.meanSquaredError(returns, network.critic(observations))));
+            tf.tidy(() => network.trainValue(() => tf.losses.meanSquaredError(returns, network.value(observations))));
 
             opsRecorder.end();
         }

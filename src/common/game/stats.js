@@ -4,6 +4,7 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import fs from "fs/promises";
 import Survaillant from "../../survaillant/src/index.js";
 
 /**
@@ -117,6 +118,16 @@ class GamesStats {
      */
     toCSV() {
         return `mapName, score, nbTurn, nbKilled, nbChests, comboScore, gameOverReason\n${this.#stats.map(s => s.toCSV()).join("\n")}`;
+    }
+
+    /**
+     * Write statistics into the given file (format: CSV)
+     *
+     * @param file Path to the file
+     * @return {Promise<void>} Promise
+     */
+    async writeTo(file) {
+        await fs.writeFile(file, this.toCSV(), "utf-8");
     }
 }
 

@@ -120,3 +120,6 @@ dist
 
 # Jetbrains config
 .idea/
+
+# CUDA/CuDNN dlls
+*.dll

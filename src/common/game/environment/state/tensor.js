@@ -144,7 +144,7 @@ class SummaryEntityLayer extends EntityVisitor {
  * Class defining the value for each entity in the exhaustive representation
  */
 class ExhaustiveEntityValue extends EntityVisitor {
-    static CHEST = [ undefined, 1, undefined, undefined, undefined, undefined, undefined ];
+    static CHEST = [ 1, 1, undefined, undefined, undefined, undefined, undefined ];
     static TRAP = [ undefined, 1, undefined ];
     static MONSTER_SPAWN = [ undefined, 1, undefined, undefined ];
 

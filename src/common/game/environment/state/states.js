@@ -214,4 +214,9 @@ class FlashlightStateGenerator extends StateGenerator {
     }
 }
 
-export { FlashlightStateGenerator, NormalStateGenerator };
+const Generator = {
+    FLASHLIGHT: "FLASHLIGHT",
+    NORMAL: "NORMAL"
+};
+
+export { FlashlightStateGenerator, NormalStateGenerator, Generator };

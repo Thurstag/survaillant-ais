@@ -123,7 +123,7 @@ RewardPolicies.SCORE_BASED = class ScoreDrivenPolicy {
 /**
  * Create a reward policy based on the given identifier
  *
- * @param {string} id Policy's identifier
+ * @param {string} id Policy's identifier (one of {@link RewardPolicy})
  * @return {MapRewardPolicy|ScoreDrivenPolicy} Policy
  */
 function createPolicy(id) {
