@@ -5,6 +5,7 @@
  * Refer to the LICENSE file included.
  */
 import tf from "@tensorflow/tfjs";
+import { TrainingInformationKey } from "../../training.js";
 import { NONE, WALL } from "./entities.js";
 import { NO_LAYER } from "./tensor.js";
 
@@ -48,12 +49,23 @@ class StateGenerator {
     id() {
         throw new Error("id isn't implemented");
     }
+
+    /**
+     * Get information about the state
+     *
+     * @return {{type: string, parameters: Object, representation: String}} Information
+     */
+    info() {
+        throw new Error("info isn't implemented");
+    }
 }
 
 /**
  * Class generating a state representing the whole map
  */
 class NormalStateGenerator extends StateGenerator {
+    static ID = "normal";
+
     #stateDimX;
     #stateDimY;
 
@@ -72,7 +84,17 @@ class NormalStateGenerator extends StateGenerator {
     }
 
     id() {
-        return `normal[${this.#stateDimX}x${this.#stateDimY}, ${this.tensorInfo.name}]`;
+        return `${NormalStateGenerator.ID}[${this.#stateDimX}x${this.#stateDimY}, ${this.tensorInfo.name}]`;
+    }
+
+    info() {
+        const info = {};
+        info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE] = NormalStateGenerator.ID;
+        const parameters = info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS] = {};
+        parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ this.#stateDimX, this.#stateDimY ];
+        info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION] = this.tensorInfo.name;
+
+        return info;
     }
 
     shape() {
@@ -126,6 +148,8 @@ class NormalStateGenerator extends StateGenerator {
  * After a specific distance, the player doesn't have information about the map
  */
 class FlashlightStateGenerator extends StateGenerator {
+    static ID = "flashlight";
+
     #radius;
     #stateDim;
 
@@ -143,7 +167,17 @@ class FlashlightStateGenerator extends StateGenerator {
     }
 
     id() {
-        return `flashlight[${this.#radius}, ${this.tensorInfo.name}]`;
+        return `${FlashlightStateGenerator.ID}[${this.#radius}, ${this.tensorInfo.name}]`;
+    }
+
+    info() {
+        const info = {};
+        info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE] = FlashlightStateGenerator.ID;
+        const parameters = info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS] = {};
+        parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS] = this.#radius;
+        info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION] = this.tensorInfo.name;
+
+        return info;
     }
 
     shape() {

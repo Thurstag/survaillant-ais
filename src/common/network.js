@@ -5,6 +5,8 @@
  * Refer to the LICENSE file included.
  */
 import tf from "@tensorflow/tfjs";
+import fs from "fs/promises";
+import path from "path";
 import Survaillant from "../survaillant/src/index.js";
 import LOGGER from "./logger.js";
 
@@ -16,6 +18,7 @@ class SurvaillantNetwork {
     static ACTIONS_COUNT = Survaillant.PlayerMoves.length;
     static SAVED_MODEL_EXTENSION = ".sm";
     static MODEL_FILENAME = "model.json";
+    static TRAINING_INFO_FILENAME = "training_info.json";
 
     #networks;
 
@@ -64,13 +67,18 @@ class SurvaillantNetwork {
      * Save networks
      *
      * @param {function(String): String} fileSupplier Function returning the location where the given network will be saved (argument: network's name)
+     * @param {Object} info Training information
+     * @param {String} protocol Protocol identifier
      * @return {Promise<void>} Promise
      */
-    async saveTo(fileSupplier) {
+    async saveTo(fileSupplier, info, protocol) {
         for (const [ name, { network } ] of Object.entries(this.#networks)) {
-            await network.save(fileSupplier(name), {
+            const networkPath = fileSupplier(name);
+
+            await network.save(`${protocol}://${networkPath}`, {
                 includeOptimizer: true
             });
+            await fs.writeFile(path.join(networkPath, SurvaillantNetwork.TRAINING_INFO_FILENAME), JSON.stringify(info), "utf-8");
         }
     }
 }

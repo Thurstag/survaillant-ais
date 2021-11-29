@@ -180,10 +180,9 @@ async function main() {
     const networkExportFolder = args[Argument.NETWORK_FOLDER];
     const agent = new PpoAgent(args[Argument.EPOCHS], args[Hyperparameter.STEPS_PER_EPOCH], args[Hyperparameter.TRAIN_POLICY_ITERATIONS], args[Hyperparameter.TRAIN_VALUE_ITERATIONS],
         args[Hyperparameter.TARGET_KL], args[Hyperparameter.CLIP_RATIO], args[Hyperparameter.GAMMA], args[Hyperparameter.LAM]);
-    const id = await agent.train(network, env, async (epoch, network) => {
+    const id = await agent.train(network, env, async (epoch, metadata, network) => {
         try {
-            await network.saveTo(name => `file://${networkExportFolder}${sep}${name}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`);
-            // TODO: Save training metadata
+            await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
             LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
         } catch (e) {
             LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);

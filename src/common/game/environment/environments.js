@@ -6,6 +6,7 @@
  */
 import Survaillant from "../../../survaillant/src/index.js";
 import { GamesStats } from "../stats.js";
+import { TrainingInformationKey } from "../training.js";
 import { MapRewardPolicy } from "./reward.js";
 
 /**
@@ -112,12 +113,22 @@ class Environment {
     id() {
         throw new Error("id isn't implemented");
     }
+    /**
+     * Get information about the environment
+     *
+     * @return {{state: Object, type: string, maps: String[], policy: string}} Information
+     */
+    info() {
+        throw new Error("info isn't implemented");
+    }
 }
 
 /**
  * Training environment where the network trains only one map
  */
 class SingleMapEnvironment extends Environment {
+    static ID = "single";
+
     #map;
 
     /**
@@ -138,7 +149,17 @@ class SingleMapEnvironment extends Environment {
     }
 
     id() {
-        return `single[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}`;
+        return `${SingleMapEnvironment.ID}[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}`;
+    }
+
+    info() {
+        const info = {};
+        info[TrainingInformationKey.ENV_KEYS.TYPE] = SingleMapEnvironment.ID;
+        info[TrainingInformationKey.ENV_KEYS.MAPS] = [ this.#map.name ];
+        info[TrainingInformationKey.ENV_KEYS.POLICY] = this.policy.name;
+        info[TrainingInformationKey.ENV_KEYS.STATE] = this.stateGenerator.info();
+
+        return info;
     }
 }
 

@@ -7,6 +7,7 @@
 import tf from "@tensorflow/tfjs";
 import TimeUnit from "timeunit";
 import { GamesStats } from "../common/game/stats.js";
+import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
 import SurvaillantNetwork from "../common/network.js";
 import scipy from "../common/scipy/index.js";
@@ -128,6 +129,8 @@ class TrajectoriesBuffer {
  * Agent responsible for training a network based on PPO model
  */
 class PpoAgent {
+    static ID = "ppo";
+
     #epochs;
     #stepsPerEpoch;
     #policyTrainingIterations;
@@ -165,7 +168,7 @@ class PpoAgent {
      *
      * @param {PpoTrainingNetwork} network Network to train
      * @param {Environment} env Training environment to use
-     * @param {function(number, PpoTrainingNetwork)} onEpoch Callback called at the end of each epoch (arguments: current epoch, network)
+     * @param {function(number, Object, PpoTrainingNetwork)} onEpoch Callback called at the end of each epoch (arguments: current epoch, training information, network)
      * @return {Promise<String>} Training identifier
      */
     async train(network, env, onEpoch) {
@@ -181,10 +184,15 @@ class PpoAgent {
                 this.#trainOnBuffer(network, buffer, epoch);
             });
 
-            await onEpoch(epoch, network);
+            const info = {};
+            info[TrainingInformationKey.AGENT] = PpoAgent.ID;
+            info[TrainingInformationKey.EPOCHS] = epoch + 1;
+            info[TrainingInformationKey.ENV] = env.info();
+
+            await onEpoch(epoch, info, network);
         }
 
-        return `PPO_${this.#epochs}_${env.id()}`;
+        return `${PpoAgent.ID}_${this.#epochs}_${env.id()}`;
     }
 
     /**
