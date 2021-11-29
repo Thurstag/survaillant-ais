@@ -5,9 +5,10 @@
     "scripts": {
         "example:random": "node dev/survaillant/random-player.js",
         "dqn:train": "node src/dqn/train.js",
-        "ppo:train": "node src/ppo/train.js",
-        "lint": "cross-env NODE_ENV=production eslint src/**/*.js",
-        "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**/*.js"
+        "ppo:train": "node src/ppo/train-script.js",
+        "test": "mocha test/**/*.js",
+        "lint": "cross-env NODE_ENV=production eslint src/**/*.js test/**/*.js",
+        "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**/*.js test/**/*.js"
     },
     "dependencies": {
         "@tensorflow/tfjs": "2.8.6",
@@ -20,8 +21,11 @@
         "winston": "^3.3.3"
     },
     "devDependencies": {
+        "chai": "^4.3.4",
+        "chai-fs": "^2.0.0",
         "cross-env": "^7.0.3",
-        "eslint": "^8.2.0"
+        "eslint": "^8.2.0",
+        "mocha": "^9.1.3"
     },
     "type": "module",
     "engines": {

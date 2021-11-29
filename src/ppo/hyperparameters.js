@@ -31,7 +31,7 @@ PpoDefaultHyperparameter[PpoHyperparameter.TARGET_KL] = 0.01;
 PpoDefaultHyperparameter[PpoHyperparameter.HIDDEN_LAYER_UNITS] = [ 64, 64 ];
 
 const PpoHyperparameterInfo = {};
-PpoHyperparameterInfo[PpoHyperparameter.STEPS_PER_EPOCH] = "Game steps to done at each epoch";
+PpoHyperparameterInfo[PpoHyperparameter.STEPS_PER_EPOCH] = "Game steps to do at each epoch";
 PpoHyperparameterInfo[PpoHyperparameter.GAMMA] = "Gamma (see PPO hyperparameters for more information)";
 PpoHyperparameterInfo[PpoHyperparameter.CLIP_RATIO] = "Clip ratio (see PPO hyperparameters for more information)";
 PpoHyperparameterInfo[PpoHyperparameter.POLICY_LEARNING_RATE] = "Policy network learning rate";
