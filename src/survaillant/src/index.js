@@ -4,20 +4,20 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
-
 import fs from "fs";
-import * as tf from "@tensorflow/tfjs";
-
-process.on("SIGINT", () => { process.exit(); });
-
-// Models
-import Map from "./models/games/Map.js";
+import { GameStats } from "../../common/game/stats.js";
 import Game from "./models/games/Game.js";
+import Map from "./models/games/Map.js";
+
+process.on("SIGINT", () => {
+    process.exit();
+});
 
 // ======== data ========
 let maps = [];
 
 // Init
+// TODO: Remove this because it slows down scripts and scripts should have a parameter to select a map
 loadData();
 
 function loadData() {
@@ -33,110 +33,59 @@ function loadData() {
 
 
 const Survaillant = {
-    getMaps: () => { return maps; },
-    createGame: (map) => { return new SurvaillantGame(map, "solo"); }
+    getMaps: () => {
+        return maps;
+    },
+    createGame: (map) => {
+        return new SurvaillantGame(map, "solo");
+    },
+    PlayerMoves: [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ],
+    ActionConsequence: {
+        MOVED: "MOVED",
+        BAD_MOVEMENT: "BAD_MOVEMENT",
+        GAME_OVER: "GAME_OVER",
+        KILL: "KILL"
+    }
 };
 
 // TODO: Doc
 class SurvaillantGame {
+    #stats;
+
     // TODO: Doc
     constructor(map) {
         this.game = new Game(map, "solo");
-        let dummyClient = { id: 0, account: null };
-        this.game.addPayer(dummyClient, "A furtive bot");
+        this.game.addPayer({ id: 0, account: null }, "A furtive bot");
+        this.#stats = new GameStats(this);
+    }
+
+    /**
+     * Get game's statistics
+     *
+     * @return {GameStats} Statistics
+     */
+    get stats() {
+        return this.#stats;
     }
 
     // TODO: Doc
-    getState() { return this.game.get(); }
-
-    // TODO: Doc
-    getStateAsTensor(w, h) {
-        let state = this.game.get();
-
-        //// DUNGEON(0)
-        // Ground :           0
-        // Wall :             1
-        // Chest :            2
-        // Trap positon 0 :   3
-        // Trap positon 1 :   4
-        // Trap positon 2 :   5
-        // (When at 'positon 2', the traps will kill next turn)
-        // Monster or chest spawn 3 :  6
-        // Monster or chest spawn 2 :  7
-        // Monster or chest spawn 1 :  8
-        // (When at 'spawn 1', the chest or monster will spawn next turn)
-
-        //// ENTITY(1)
-        // Empty :            0
-        // Player :           1
-        // Monster :          2
-
-        const buffer = tf.buffer([ 1, h, w, 2 ]);
-        const DUNGEON = 0;
-        const ENTITY = 1;
-
-        // Init buffers with default values
-        for (let i = 0; i < h; i++)
-            for (let j = 0; j < w; j++)
-                buffer.set(1, 0, i, j, DUNGEON);
-
-
-        for (let i = 0; i < h; i++)
-            for (let j = 0; j < w; j++)
-                buffer.set(0, 0, i, j, ENTITY);
-
-        // floor
-        let wLimit = Math.min(state.map.board.dimX, w);
-        let hLimit = Math.min(state.map.board.dimY, h);
-        for (let i = 0; i < wLimit; i++)
-            for (let j = 0; j < hLimit; j++)
-                if (state.map.floor[i][j] === 1)
-                    buffer.set(0, 0, i, j, DUNGEON);
-
-        // chests
-        state.chests.forEach(chest => {
-            if (!chest.dead) buffer.set(2, 0, chest.pos.x, chest.pos.y, DUNGEON);
-            else if (chest.timeBeforeSpawn <= 3) buffer.set(9 - chest.timeBeforeSpawn, 0, chest.pos.x, chest.pos.y, DUNGEON);
-        });
-        // Traps
-        state.traps.forEach(trap => {
-            buffer.set(trap.loop + 3, 0, trap.pos.x, trap.pos.y, DUNGEON);
-        });
-        // Spawns
-        state.monsterSpawns.forEach(monsterSpawn => {
-            if (monsterSpawn.monsterSpawning)
-                buffer.set(9 - monsterSpawn.timeBeforeSpawn, 0, monsterSpawn.pos.x, monsterSpawn.pos.y, DUNGEON);
-        });
-
-        // Entities
-        // Player
-        let playerPos = state.players[0].pos;
-        buffer.set(1, 0, playerPos.x, playerPos.y, ENTITY);
-
-        // Monsters
-        state.monsters.forEach(monster => {
-            buffer.set(2, 0, monster.pos.x, monster.pos.y, ENTITY);
-        });
-
-        return buffer.toTensor();
+    getState() {
+        return this.game.get();
     }
 
-    // TODO: Doc
-    displayTensor(tensor) {
-        process.stdout.write("\n");
-        let t = tensor.arraySync();
+    /**
+     * Iterate over game's entities and call the given callback when an entity is encountered
+     *
+     * @param {function(Entity|MonsterSpawn)} onEntity
+     */
+    forEach(onEntity) {
+        let gameInstance = this.game;
 
-        for (let i = 0; i < t[0].length; i++) {
-            for (let j = 0; j < t[0][i].length; j++) {
-                let value = t[0][i][j][1] !== 0 ? (t[0][i][j][1] === 1 ? "P" : "M") : t[0][i][j][0];
-                if (value == 0) process.stdout.write(" ");
-                else if (value == 1) process.stdout.write("#");
-                else if (value == 2) process.stdout.write("C");
-                else process.stdout.write(value + "");
-            }
-            process.stdout.write("\n");
-        }
-
+        gameInstance.monsters.forEach(onEntity);
+        gameInstance.chests.forEach(onEntity);
+        gameInstance.traps.forEach(onEntity);
+        gameInstance.monsterSpawns.forEach(onEntity);
+        gameInstance.players.forEach(onEntity);
     }
 
     // TODO: Doc
@@ -144,18 +93,24 @@ class SurvaillantGame {
         let player = this.game.players[0];
 
         // Params check
-        if (dx === undefined || dy === undefined) throw "dx and dy requiered";
+        if (dx === undefined || dy === undefined) throw "dx and dy required";
 
         let choiceStatus = this.game.checkPlayerMovementChoice(player, { dx, dy });
-        if (choiceStatus.badMovement) return -1;
+        if (choiceStatus.badMovement) {
+            return this.#stats.gameOverReason = Survaillant.ActionConsequence.BAD_MOVEMENT;
+        }
 
         // Good movement
+        const oldKillCount = this.game.nbKilledMonsters;
         if (this.game.allMvmtDone()) {
             this.game.nextTurn();
 
-            if (this.game.gameOver) return -2;
+            if (this.game.gameOver) {
+                return this.#stats.gameOverReason = Survaillant.ActionConsequence.GAME_OVER;
+            }
         }
-        return 0;
+
+        return this.game.nbKilledMonsters > oldKillCount ? Survaillant.ActionConsequence.KILL : Survaillant.ActionConsequence.MOVED;
     }
 
     // TODO: Doc
@@ -165,7 +120,7 @@ class SurvaillantGame {
         let player = this.game.player[0];
 
         if (item == undefined || !availableItems.includes(item))
-            throw "A correct Item is requiered";
+            throw "A correct Item is required";
 
         if (player.inventory[item] == 0) // The player has no item
             return -1;
@@ -173,11 +128,6 @@ class SurvaillantGame {
         // set item to the player
         player.selectedItem = item;
         player.nextMove = null;
-    }
-
-    // TODO: Doc
-    getScores() {
-        return this.game.getScores();
     }
 }
 

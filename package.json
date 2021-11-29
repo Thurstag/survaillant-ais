@@ -3,18 +3,21 @@
     "version": "0.0.0",
     "description": "A set of artificial intelligences playing Survaillant",
     "scripts": {
-        "example": "node dev/survaillant/example.js",
+        "example:random": "node dev/survaillant/random-player.js",
         "dqn:train": "node src/dqn/train.js",
-        "lint": "cross-env NODE_ENV=production eslint src/**",
-        "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**"
+        "ppo:train": "node src/ppo/train.js",
+        "lint": "cross-env NODE_ENV=production eslint src/**/*.js",
+        "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**/*.js"
     },
     "dependencies": {
+        "@tensorflow/tfjs": "2.8.6",
+        "@tensorflow/tfjs-node": "2.8.6",
+        "@tensorflow/tfjs-node-gpu": "2.8.6",
         "argparse": "^2.0.1",
-        "@tensorflow/tfjs": "^2.6.0",
-        "@tensorflow/tfjs-node": "^2.6.0",
-        "@tensorflow/tfjs-node-gpu": "^2.6.0",
         "pathfinding": "^0.4.18",
-        "uuid": "^8.3.2"
+        "uuid": "^8.3.2",
+        "timeunit": "^1.1.1",
+        "winston": "^3.3.3"
     },
     "devDependencies": {
         "cross-env": "^7.0.3",
