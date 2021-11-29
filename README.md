@@ -4,20 +4,29 @@
 <p align="center">
     <a href="https://github.com/Thurstag/survaillant-ais/actions/workflows/ci.yml">
         <img src="https://github.com/Thurstag/survaillant-ais/actions/workflows/ci.yml/badge.svg" alt="Continuous integration status"
-             style="display: block; margin: auto" />    
+             style="display: block; margin: auto" />
     </a>
 </p>
 
 # Game
 
-TODO: EXPLAIN THE GAME
+<p align="center">
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/Survaillant.png"
+         style="display: block; margin: auto" alt="Survaillant">
+</p>
+
+Survaillant is a reflexion and strategy game playable in solo, PVP or COOP. The goal is to stay alive as long as possible in a dungeon where monsters move only when you move.
+
+Survaillant is very inspired by the mobile game <a href="https://play.google.com/store/apps/details?id=com.nitrome.rustbucket&hl=fr&gl=US">Rust Bucket</a>, but implement some unique multi-player features, and it is web hosted, you can play it <a href="http://tomansion.fr:8081">HERE</a>.
+
+For this project, we are focussing on creating an AI that can play the game using reinforcement neural networks.
 
 # Network
 
 The artificial intelligences are based on a neural network trained with reinforcement learning.
 
-The trained network takes the map in input (the values/shape of the input depends on the training environment, 
-please refer to the training environment section) and returns the probability to select: up or down or left or right. 
+The trained network takes the map in input (the values/shape of the input depends on the training environment,
+please refer to the training environment section) and returns the probability to select: up or down or left or right.
 
 # Training environment
 
@@ -45,8 +54,8 @@ Its identifier is `bandit` in script arguments.
 
 ### Neutral
 
-Neutral is a policy that uses the same rules as the real game. It penalizes a game over and bad movements with `-5` 
-and in both cases, the game is done. If the AI moves or kills a monster, we reward it with `+1`. 
+Neutral is a policy that uses the same rules as the real game. It penalizes a game over and bad movements with `-5`
+and in both cases, the game is done. If the AI moves or kills a monster, we reward it with `+1`.
 Its identifier is `neutral` in script arguments.
 
 ### Score-based
@@ -65,20 +74,20 @@ A network takes in input a tensor, so we need to define a function to transform 
 representations of the map: flashlight mode, normal mode.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/map.jpg" 
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/map.jpg"
          style="display: block; margin: auto" alt="Game in normal mode">
 </p>
 
-In normal mode, the network takes in input the whole map and the map should be smaller or equal to 
+In normal mode, the network takes in input the whole map and the map should be smaller or equal to
 the input shape of the network. The main downside of this mode is that the network will have more issues to play on
 a map larger than the map used for training.
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/flashlight_map.jpg" 
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/flashlight_map.jpg"
          style="display: block; margin: auto" alt="Game in flashlight mode">
 </p>
 
-In flashlight mode, the network takes in input the surrounding of the player (e.g: only 8 squares around it if the radius is 1). 
+In flashlight mode, the network takes in input the surrounding of the player (e.g: only 8 squares around it if the radius is 1).
 With this mode, the network can play on any map easily, but it has less information about further entities on the map.
 
 The tensor is a 3D-array, so we use the first two dimensions to define the position of an entity and the last to
