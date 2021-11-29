@@ -7,6 +7,9 @@
 
 // Import the game functions
 import Survaillant from "../../src/survaillant/src/index.js";
+import { flashlight, LAYERS_COUNT } from "../../src/common/states.js";
+
+console.log(LAYERS_COUNT);
 
 // Getting the loaded maps info
 let maps = Survaillant.getMaps();
@@ -70,24 +73,22 @@ let game = Survaillant.createGame(map);
 
 console.log("Starting the game");
 
-// let state = game.getStateMatrix({w: 13, h:13})
-game.getStateAsTensor( 13, 13 );
-
 const DIRECTION = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 for (let i = 0; i < 100; i++) {
     let direction = DIRECTION[Math.floor(Math.random() * DIRECTION.length)];
 
     let result = game.movePlayer(direction[0], direction[1]);
 
-    if (result === -1) console.log("Bot moved into a wall !");
+    // if (result === "BAD_MOVEMENT") console.log("Bot moved into a wall !");
 
-    else if (result === -2) {
-        console.log("Game over !");
+    if (result === "GAME_OVER") {
+        // console.log("Game over !");
         break;
     }
-    game.getStateAsTensor( 13, 13 );
 
-    console.log("movement OK");
+    // test the game state loading
+    flashlight(game, 3);
+    // game.displayTensor(ts);
 }
 
 console.log("score : " + game.getScores().totalScore);

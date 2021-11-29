@@ -5,7 +5,7 @@ from tensorflow.keras import layers
 import scipy.signal
 import requests
 
-SERVER_URL = "http://localhost:3000/"
+SERVER_URL = "http://localhost:4000/"
 
 
 def reset_game():

@@ -1,9 +1,12 @@
 import express from "express";
 import Survaillant from "../survaillant/src/index.js";
+import { flashlight } from "../common/states.js";
 
 const app = express();
-
-app.listen(3000);
+const port = 4000;
+app.listen(port, ()=>{
+    console.log("listening on port", port);
+});
 
 let game = Survaillant.createGame(Survaillant.getMaps()[0]);
 
@@ -17,6 +20,10 @@ app.get("/getGameSate/fullMap", (req, res) => {
     res.send(game.getStateAsTensor(parseInt(req.query.x), parseInt(req.query.y)).arraySync());
 });
 
+app.get("/getGameSate/flashLight", (req, res) => {
+    res.send(flashlight(game, parseInt(req.query.radius)).arraySync());
+});
+
 app.get("/movePlayer", (req, res) => {
     res.send({ resp: game.movePlayer(parseInt(req.query.x), parseInt(req.query.y)) });
 });
@@ -24,6 +31,3 @@ app.get("/movePlayer", (req, res) => {
 app.get("/getScores", (req, res) => {
     res.send(game.getScores());
 });
-
-
-
