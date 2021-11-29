@@ -11,7 +11,7 @@
 # Game
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/game_readme/.github/images/Survaillant.png"
+    <img src="https://raw.githubusercontent.com/Thurstag/survaillant-ais/master/.github/images/Survaillant.png"
          style="display: block; margin: auto" alt="Survaillant">
 </p>
 
