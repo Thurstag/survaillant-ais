@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 import tf from "@tensorflow/tfjs";
-import SurvaillantNetwork from "../common/network.js";
+import { SurvaillantFinalNetwork, SurvaillantTrainingNetwork } from "../common/network.js";
 import keras from "../common/tensorflow/keras.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
 
@@ -13,10 +13,31 @@ const POLICY_NETWORK_NAME = "policy";
 const VALUE_NETWORK_NAME = "value";
 
 /**
+ * Final version of a network based on Proximal Policy Optimization model (it doesn't contain the value network)
+ */
+class PpoFinalNetwork extends SurvaillantFinalNetwork {
+    #network;
+
+    /**
+     * Constructor
+     *
+     * @param {tf.LayersModel} network Policy network
+     */
+    constructor(network) {
+        super();
+        this.#network = network;
+    }
+
+    predict(inputs) {
+        return tf.softmax(this.#network.predict(inputs)).argMax(-1);
+    }
+}
+
+/**
  * Training version of a network based on Proximal Policy Optimization model.
  * Value network returns a scalar and policy network returns a 1D tensor with 4 values.
  */
-class PpoTrainingNetwork extends SurvaillantNetwork {
+class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     /** Number of outputs for value network */
     static VALUE_OUTPUTS_COUNT = 1;
 
@@ -117,7 +138,7 @@ function random(x, y, z, units = DefaultHyperparameter.HIDDEN_LAYER_UNITS, polic
     const flattenInput = tf.layers.flatten().apply(input);
 
     return new PpoTrainingNetwork(
-        tf.model({ inputs: [ input ], outputs: [ feedforward(units.concat([ SurvaillantNetwork.ACTIONS_COUNT ]), flattenInput, "tanh") ] }),
+        tf.model({ inputs: [ input ], outputs: [ feedforward(units.concat([ SurvaillantTrainingNetwork.ACTIONS_COUNT ]), flattenInput, "tanh") ] }),
         tf.model({ inputs: [ input ], outputs: [ feedforward(units.concat([ PpoTrainingNetwork.VALUE_OUTPUTS_COUNT ]), flattenInput, "tanh") ] }),
         keras.adam(policyLearningRate),
         keras.adam(valueLearningRate)
@@ -142,6 +163,14 @@ async function fromNetworks(policy, value, policyLearningRate = DefaultHyperpara
     );
 }
 
-// TODO: Create a function to load only policy network
+/**
+ * Create a final PPO network based on its policy network
+ *
+ * @param {String} policy Path to the file defining the policy network
+ * @return {Promise<PpoFinalNetwork>} Network
+ */
+async function fromNetwork(policy) {
+    return new PpoFinalNetwork(await tf.loadLayersModel(policy));
+}
 
-export { random, fromNetworks, POLICY_NETWORK_NAME, VALUE_NETWORK_NAME };
+export { random, fromNetworks, fromNetwork, POLICY_NETWORK_NAME, VALUE_NETWORK_NAME };

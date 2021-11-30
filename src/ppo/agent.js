@@ -9,7 +9,8 @@ import TimeUnit from "timeunit";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
-import SurvaillantNetwork from "../common/network.js";
+import { v4 as uuidv4 } from "uuid";
+import { SurvaillantTrainingNetwork } from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
@@ -22,7 +23,7 @@ import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparame
  * @return {Tensor} Log-probabilities
  */
 function logProbabilities(logits, action) {
-    return tf.sum(tf.oneHot(action, SurvaillantNetwork.ACTIONS_COUNT).mul(tf.softmax(logits)), 1);
+    return tf.sum(tf.oneHot(action, SurvaillantTrainingNetwork.ACTIONS_COUNT).mul(tf.softmax(logits)), 1);
 }
 
 /**
@@ -188,6 +189,7 @@ class PpoAgent {
             info[TrainingInformationKey.AGENT] = PpoAgent.ID;
             info[TrainingInformationKey.EPOCHS] = epoch + 1;
             info[TrainingInformationKey.ENV] = env.info();
+            info[TrainingInformationKey.ID] = uuidv4();
 
             await onEpoch(epoch, info, network);
         }

@@ -11,9 +11,24 @@ import Survaillant from "../survaillant/src/index.js";
 import LOGGER from "./logger.js";
 
 /**
- * Base class for networks, implementing common methods like summary, gradients application...
+ * Base class for networks playing games
  */
-class SurvaillantNetwork {
+class SurvaillantFinalNetwork {
+    /**
+     * Generate predictions for the given batch of inputs
+     *
+     * @param {Tensor} inputs Batch of inputs
+     * @return {Tensor} Prediction (in [0, {@link SurvaillantTrainingNetwork#ACTIONS_COUNT})) for each input
+     */
+    predict(inputs) { // eslint-disable-line no-unused-vars
+        throw new Error("predict isn't implemented");
+    }
+}
+
+/**
+ * Base class for networks that are in training phase, implementing common methods like summary, gradients application...
+ */
+class SurvaillantTrainingNetwork {
     /** Number of possible actions that a player can do */
     static ACTIONS_COUNT = Survaillant.PlayerMoves.length;
     static SAVED_MODEL_EXTENSION = ".sm";
@@ -78,9 +93,9 @@ class SurvaillantNetwork {
             await network.save(`${protocol}://${networkPath}`, {
                 includeOptimizer: true
             });
-            await fs.writeFile(path.join(networkPath, SurvaillantNetwork.TRAINING_INFO_FILENAME), JSON.stringify(info), "utf-8");
+            await fs.writeFile(path.join(networkPath, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME), JSON.stringify(info), "utf-8");
         }
     }
 }
 
-export default SurvaillantNetwork;
+export { SurvaillantTrainingNetwork, SurvaillantFinalNetwork };

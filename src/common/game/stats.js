@@ -23,6 +23,15 @@ class GamesStats {
     }
 
     /**
+     * Add the given games' statistics
+     *
+     * @param {GamesStats} stats Games statistics to add
+     */
+    addAll(stats) {
+        this.#stats = this.#stats.concat(stats.#stats);
+    }
+
+    /**
      * Generate a summary of statistics of stored games
      *
      * @return {{

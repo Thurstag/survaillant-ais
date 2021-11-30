@@ -110,6 +110,7 @@ and spawning entities are on a level. For spawning entities, they aren't represe
 - `lint`: a script used to perform code static analysis and code format check
 - `lint:fix`: a script used to fix formatting issues in code
 - `example:random`: a script used to run games with random actions
+- `validate`: a script used to validate a trained network on multiple maps
 
 Scripts related to network training are explained in Modules section.
 
