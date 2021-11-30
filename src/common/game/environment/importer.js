@@ -51,9 +51,10 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
             case Generator.FLASHLIGHT:
                 return new FlashlightStateGenerator(parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS], representation);
 
-            case Generator.NORMAL:
+            case Generator.NORMAL: {
                 const dimensions = parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS];
                 return new NormalStateGenerator(dimensions[0], dimensions[1], representation);
+            }
 
             default:
                 throw new Error("Unknown state mode: " + mode);

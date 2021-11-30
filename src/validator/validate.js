@@ -104,16 +104,12 @@ async function main() {
         for (let i = 0; i < games; i++) {
             env.reset();
 
-            while (true) {
+            let done;
+            do {
                 // Ask network its prediction
                 const action = network.predict(env.state().expandDims()).dataSync()[0];
-                const { done } = env.step(action);
-
-                // Check game's status
-                if (done) {
-                    break;
-                }
-            }
+                done = env.step(action).done;
+            } while (!done);
             progress.tick();
         }
         stats.addAll(env.stats);

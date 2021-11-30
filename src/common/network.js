@@ -20,7 +20,7 @@ class SurvaillantFinalNetwork {
      * @param {Tensor} inputs Batch of inputs
      * @return {Tensor} Prediction (in [0, {@link SurvaillantTrainingNetwork#ACTIONS_COUNT})) for each input
      */
-    predict(inputs) {
+    predict(inputs) { // eslint-disable-line no-unused-vars
         throw new Error("predict isn't implemented");
     }
 }

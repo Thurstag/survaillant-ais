@@ -105,7 +105,7 @@ describe("Training integration tests", () => {
                         chai.expect(policy.name).to.be.equal(rewardPolicy);
                         chai.expect(network).to.exist;
                         chai.expect(stateGenerator.info()).to.deep.equal(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE]);
-                   }
+                    }
                 });
             }
         }
