@@ -9,7 +9,7 @@ import fs from "fs";
 import { array, path } from "../common/argparse.js";
 import { RewardPolicy } from "../common/game/environment/reward.js";
 import { Generator } from "../common/game/environment/state/states.js";
-import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
+import { Representation } from "../common/game/environment/state/tensor.js";
 import LOGGER from "../common/logger.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter, PpoHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
@@ -56,7 +56,7 @@ function parseArguments() {
     });
     parser.add_argument(`--${Argument.REPRESENTATION}`, {
         type: "str",
-        choices: Object.keys(EntitiesRepresentation).map(r => r.toLowerCase()),
+        choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
         help: "Representation of the game's state (Please refer to the 'State generator' section of README.md for more information)"
     });

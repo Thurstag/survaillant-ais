@@ -217,9 +217,15 @@ class ExhaustiveEntityLayer extends EntityVisitor {
     }
 }
 
-const EntitiesRepresentation = {
-    SUMMARY: new TensorEntitiesRepresentation(new SummaryEntityLayer(), new SummaryEntityValue(), "summary"),
-    EXHAUSTIVE: new TensorEntitiesRepresentation(new ExhaustiveEntityLayer(), new ExhaustiveEntityValue(), "exhaustive")
+
+const Representation = {
+    SUMMARY: "SUMMARY",
+    EXHAUSTIVE: "EXHAUSTIVE"
 };
 
-export { EntitiesRepresentation, NO_LAYER };
+const EntitiesRepresentation = {};
+EntitiesRepresentation[Representation.SUMMARY] = new TensorEntitiesRepresentation(new SummaryEntityLayer(), new SummaryEntityValue(), Representation.SUMMARY.toLowerCase());
+EntitiesRepresentation[Representation.EXHAUSTIVE] = new TensorEntitiesRepresentation(new ExhaustiveEntityLayer(), new ExhaustiveEntityValue(), Representation.EXHAUSTIVE.toLowerCase());
+
+
+export { EntitiesRepresentation, Representation, NO_LAYER };

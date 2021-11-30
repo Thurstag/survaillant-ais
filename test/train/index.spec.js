@@ -9,10 +9,10 @@ import { before, beforeEach, describe, it } from "mocha";
 import path from "path";
 import TimeUnit from "timeunit";
 import url from "url";
-import { SingleMapEnvironment } from "../../src/common/game/environment/environments.js";
+import { ListMapEnvironment, SingleMapEnvironment } from "../../src/common/game/environment/environments.js";
 import { RewardPolicy } from "../../src/common/game/environment/reward.js";
 import { Generator } from "../../src/common/game/environment/state/states.js";
-import { EntitiesRepresentation } from "../../src/common/game/environment/state/tensor.js";
+import { Representation } from "../../src/common/game/environment/state/tensor.js";
 import { TrainingInformationKey } from "../../src/common/game/training.js";
 import SurvaillantNetwork from "../../src/common/network.js";
 import { BACKEND, load } from "../../src/common/tensorflow/node/backend-loader.js";
@@ -25,15 +25,19 @@ import chai from "../utils/chai.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const TMP_DIRECTORY = path.join(__dirname, "tmp");
 
-const MAP_FILE_PATH = path.join(path.resolve(__dirname, path.join("..", "..", "src", "survaillant", "assets", "dungeons")), "privateRoom", "info.json");
-const REPRESENTATIONS = Object.keys(EntitiesRepresentation).map(r => r.toLowerCase());
+const MAPS = [ "privateRoom", "theArea" ];
+const REPRESENTATIONS = Object.values(Representation).map(r => r.toLowerCase());
 const REWARD_POLICIES = Object.values(RewardPolicy).map(p => p.toLowerCase());
 const STATE_GENERATORS = Object.values(Generator).map(g => g.toLowerCase());
 const TRAINING_TIMEOUT = TimeUnit.minutes.toMillis(5);
 const STEPS_PER_EPOCH = 500;
 const EPOCHS = 2;
 
-async function assertNetworkFiles(folder, agent, epochs, policy, state, representation) {
+function mapPath(name) {
+    return path.join(path.resolve(__dirname, path.join("..", "..", "src", "survaillant", "assets", "dungeons")), name, "info.json");
+}
+
+async function assertNetworkFiles(folder, agent, epochs, policy, state, representation, maps) {
     // Assert exported files
     chai.expect(folder).to.be.a.directory().with
         .files([ SurvaillantNetwork.TRAINING_INFO_FILENAME, SurvaillantNetwork.MODEL_FILENAME, "weights.bin" ]);
@@ -45,9 +49,9 @@ async function assertNetworkFiles(folder, agent, epochs, policy, state, represen
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.POLICY])
         .to.equal(policy);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.TYPE])
-        .to.equal(SingleMapEnvironment.ID);
+        .to.equal(maps.length === 1 ? SingleMapEnvironment.ID : ListMapEnvironment.ID);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.MAPS])
-        .to.have.lengthOf(1);
+        .to.have.lengthOf(maps.length);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE])
         .to.equal(state);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION])
@@ -77,7 +81,7 @@ describe("Training integration tests", () => {
                     this.timeout(TRAINING_TIMEOUT);
 
                     const args = {};
-                    args[PpoArgument.MAPS] = [ MAP_FILE_PATH ];
+                    args[PpoArgument.MAPS] = [ mapPath(MAPS[0]) ];
                     args[PpoArgument.POLICY] = policy;
                     args[PpoArgument.REPRESENTATION] = representation;
                     args[PpoArgument.EPOCHS] = EPOCHS;
@@ -91,7 +95,7 @@ describe("Training integration tests", () => {
                     // Assert exported files
                     for (const network of [ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ]) {
                         await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`),
-                            PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION]);
+                            PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION], [ MAPS[0] ]);
                     }
                 });
             }
@@ -102,9 +106,9 @@ describe("Training integration tests", () => {
         this.timeout(TRAINING_TIMEOUT);
 
         const args = {};
-        args[PpoArgument.MAPS] = [ MAP_FILE_PATH ];
+        args[PpoArgument.MAPS] = [ mapPath(MAPS[0]) ];
         args[PpoArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
-        args[PpoArgument.REPRESENTATION] = "exhaustive";
+        args[PpoArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
         args[PpoArgument.EPOCHS] = EPOCHS;
         args[PpoArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
         args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
@@ -117,7 +121,29 @@ describe("Training integration tests", () => {
         // Assert exported files
         for (const network of [ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ]) {
             await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`),
-                PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION]);
+                PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION], [ MAPS[0] ]);
+        }
+    });
+
+    it("Train on multiple maps", async function () {
+        this.timeout(TRAINING_TIMEOUT);
+
+        const args = {};
+        args[PpoArgument.MAPS] = MAPS.map(m => mapPath(m));
+        args[PpoArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
+        args[PpoArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
+        args[PpoArgument.EPOCHS] = EPOCHS;
+        args[PpoArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
+        args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+        args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
+
+        // Train network
+        await trainPpo(args);
+
+        // Assert exported files
+        for (const network of [ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ]) {
+            await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`),
+                PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION], MAPS);
         }
     });
 });
