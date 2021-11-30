@@ -4,6 +4,7 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import tf from "@tensorflow/tfjs";
 import Survaillant from "../../../survaillant/src/index.js";
 import { GamesStats } from "../stats.js";
 import { TrainingInformationKey } from "../training.js";
@@ -113,6 +114,7 @@ class Environment {
     id() {
         throw new Error("id isn't implemented");
     }
+
     /**
      * Get information about the environment
      *
@@ -134,7 +136,7 @@ class SingleMapEnvironment extends Environment {
     /**
      * Constructor
      *
-     * @param {Map} map Map to play
+     * @param {Map} map Map used for training
      * @param {MapRewardPolicy|ScoreDrivenPolicy} policy Reward policy
      * @param {StateGenerator} stateGenerator State generator
      */
@@ -163,6 +165,44 @@ class SingleMapEnvironment extends Environment {
     }
 }
 
-// TODO: Create an environment that selects a random map in a list for each game
+/**
+ * Training environment where the network trains multiple maps (one map is randomly selected for each game)
+ */
+class ListMapEnvironment extends Environment {
+    static ID = "list";
 
-export { SingleMapEnvironment };
+    #maps;
+
+    /**
+     * Constructor
+     *
+     * @param {Map[]} maps Maps used for training
+     * @param {MapRewardPolicy|ScoreDrivenPolicy} policy Reward policy
+     * @param {StateGenerator} stateGenerator State generator
+     */
+    constructor(maps, policy, stateGenerator) {
+        super(policy, stateGenerator);
+
+        this.#maps = maps;
+    }
+
+    createGame() {
+        return Survaillant.createGame(this.#maps[tf.randomUniform([ 1 ], 0, this.#maps.length, "int32").dataSync()[0]]);
+    }
+
+    id() {
+        return `${ListMapEnvironment.ID}[${this.#maps.map(m => m.name).join(", ")}]_${this.policy.name}_${this.stateGenerator.id()}`;
+    }
+
+    info() {
+        const info = {};
+        info[TrainingInformationKey.ENV_KEYS.TYPE] = ListMapEnvironment.ID;
+        info[TrainingInformationKey.ENV_KEYS.MAPS] =  this.#maps.map(m => m.name);
+        info[TrainingInformationKey.ENV_KEYS.POLICY] = this.policy.name;
+        info[TrainingInformationKey.ENV_KEYS.STATE] = this.stateGenerator.info();
+
+        return info;
+    }
+}
+
+export { SingleMapEnvironment, ListMapEnvironment };

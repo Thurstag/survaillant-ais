@@ -6,7 +6,7 @@
  */
 import fs from "fs";
 import { join, sep } from "path";
-import { SingleMapEnvironment } from "../common/game/environment/environments.js";
+import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environment/environments.js";
 import { createPolicy } from "../common/game/environment/reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
@@ -62,13 +62,7 @@ async function train(args) {
     })();
 
     // Create environment
-    const env = (() => {
-        if (maps.length === 1) {
-            return new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator);
-        } else {
-            throw new Error("Training on multiple maps isn't implemented");
-        }
-    })();
+    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator);
     const stateShape = env.stateShape;
 
     // Create network
