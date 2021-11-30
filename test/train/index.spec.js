@@ -47,6 +47,7 @@ async function assertNetworkFiles(folder, agent, epochs, policy, state, represen
     const trainingInfo = JSON.parse(await fs.readFile(path.join(folder, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME)));
     chai.expect(trainingInfo[TrainingInformationKey.AGENT]).to.equal(agent);
     chai.expect(trainingInfo[TrainingInformationKey.EPOCHS]).to.equal(epochs);
+    chai.expect(trainingInfo[TrainingInformationKey.ID]).to.be.a("string");
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.POLICY])
         .to.equal(policy);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.TYPE])

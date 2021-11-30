@@ -9,6 +9,7 @@ import TimeUnit from "timeunit";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
+import { v4 as uuidv4 } from "uuid";
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
@@ -188,6 +189,7 @@ class PpoAgent {
             info[TrainingInformationKey.AGENT] = PpoAgent.ID;
             info[TrainingInformationKey.EPOCHS] = epoch + 1;
             info[TrainingInformationKey.ENV] = env.info();
+            info[TrainingInformationKey.ID] = uuidv4();
 
             await onEpoch(epoch, info, network);
         }

@@ -5,6 +5,7 @@
  * Refer to the LICENSE file included.
  */
 const TrainingInformationKey = {
+    ID: "id",
     AGENT: "agent",
     EPOCHS: "epochs",
     ENV: "env",

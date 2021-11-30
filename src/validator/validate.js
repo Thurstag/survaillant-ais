@@ -122,8 +122,9 @@ async function main() {
     }
 
     // Export statistics
-    // TODO: Use uuid
-    await stats.writeTo(join(args[Argument.STATS_FOLDER], `${trainingInfo[TrainingInformationKey.AGENT]}_${trainingInfo[TrainingInformationKey.EPOCHS]}_[${trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.MAPS].join(", ")}]_${policy.name}_${stateGenerator.id()}_validation[${maps.map(m => m.name)}].csv`));
+    const statsFile = join(args[Argument.STATS_FOLDER], `${trainingInfo[TrainingInformationKey.ID]}_validation[${maps.map(m => m.name)}].csv`);
+    await stats.writeTo(statsFile);
+    LOGGER.info(`Validation statistics saved in ${statsFile}`);
 }
 
 main()
