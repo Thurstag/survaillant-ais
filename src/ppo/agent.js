@@ -9,7 +9,7 @@ import TimeUnit from "timeunit";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
-import SurvaillantNetwork from "../common/network.js";
+import { SurvaillantTrainingNetwork } from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
@@ -22,7 +22,7 @@ import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparame
  * @return {Tensor} Log-probabilities
  */
 function logProbabilities(logits, action) {
-    return tf.sum(tf.oneHot(action, SurvaillantNetwork.ACTIONS_COUNT).mul(tf.softmax(logits)), 1);
+    return tf.sum(tf.oneHot(action, SurvaillantTrainingNetwork.ACTIONS_COUNT).mul(tf.softmax(logits)), 1);
 }
 
 /**

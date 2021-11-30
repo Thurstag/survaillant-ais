@@ -11,7 +11,7 @@ import { createPolicy } from "../common/game/environment/reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
 import LOGGER from "../common/logger.js";
-import SurvaillantNetwork from "../common/network.js";
+import { SurvaillantTrainingNetwork } from "../common/network.js";
 import Map from "../survaillant/src/models/games/Map.js";
 import { PpoAgent } from "./agent.js";
 import { PpoHyperparameter as Hyperparameter } from "./hyperparameters.js";
@@ -47,7 +47,7 @@ async function train(args) {
 
     // Create state generator
     const stateGenerator = (() => {
-        let mode = args[Argument.STATE_MODE].toUpperCase();
+        const mode = args[Argument.STATE_MODE].toUpperCase();
 
         switch (mode) {
             case Generator.FLASHLIGHT:
@@ -71,8 +71,8 @@ async function train(args) {
     if (networkImportFolder === undefined || networkImportFolder === null) {
         network = random(stateShape.x, stateShape.y, stateShape.z, args[Hyperparameter.HIDDEN_LAYER_UNITS], args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
     } else {
-        network = await fromNetworks(`file://${networkImportFolder}${sep}${POLICY_NETWORK_NAME}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantNetwork.MODEL_FILENAME}`,
-            `file://${networkImportFolder}${sep}${VALUE_NETWORK_NAME}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantNetwork.MODEL_FILENAME}`,
+        network = await fromNetworks(`file://${networkImportFolder}${sep}${POLICY_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+            `file://${networkImportFolder}${sep}${VALUE_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
             args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
     }
     network.printSummary();
@@ -83,7 +83,7 @@ async function train(args) {
         args[Hyperparameter.TARGET_KL], args[Hyperparameter.CLIP_RATIO], args[Hyperparameter.GAMMA], args[Hyperparameter.LAM]);
     const id = await agent.train(network, env, async (epoch, metadata, network) => {
         try {
-            await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
+            await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
             LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
         } catch (e) {
             LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
