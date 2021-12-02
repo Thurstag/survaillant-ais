@@ -26,7 +26,8 @@ const Argument = {
     EPOCHS: "epochs",
     BASE_NETWORK_FOLDER: "base_network_folder",
     REPRESENTATION: "representation",
-    STATE_MODE: "state_mode"
+    STATE_MODE: "state_mode",
+    FLASHLIGHT_RADIUS: "flashlight_radius" // TODO: Add dim parameters
 };
 
 /**
@@ -51,7 +52,7 @@ async function train(args) {
 
         switch (mode) {
             case Generator.FLASHLIGHT:
-                return new FlashlightStateGenerator(3, representation); // TODO: Add flashlight radius + test
+                return new FlashlightStateGenerator(args[Argument.FLASHLIGHT_RADIUS], representation);
 
             case Generator.NORMAL:
                 return new NormalStateGenerator(maps.reduce((a, m) => Math.max(a, m.board.dimX), 0), maps.reduce((a, m) => Math.max(a, m.board.dimY), 0), representation);

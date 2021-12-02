@@ -15,6 +15,8 @@ import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backen
 import { PpoDefaultHyperparameter as DefaultHyperparameter, PpoHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
 import { Argument, train } from "./train.js";
 
+const REFER_STATE_README = "Please refer to the 'State generator' section of README.md for more information";
+
 /**
  * Parse program's arguments
  *
@@ -52,13 +54,19 @@ function parseArguments() {
         type: "str",
         choices: Object.values(Generator).map(g => g.toLowerCase()),
         required: true,
-        help: "Mode used to generate game's state (Please refer to the 'State generator' section of README.md for more information)"
+        help: `Mode used to generate game's state (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.FLASHLIGHT_RADIUS}`, {
+        default: 3,
+        type: "int",
+        required: false,
+        help: `Radius used in flashlight mode (${REFER_STATE_README})`
     });
     parser.add_argument(`--${Argument.REPRESENTATION}`, {
         type: "str",
         choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
-        help: "Representation of the game's state (Please refer to the 'State generator' section of README.md for more information)"
+        help: "Representation of the game's state (" + REFER_STATE_README + ")"
     });
     parser.add_argument(`--${Argument.NETWORK_FOLDER}`, {
         type: path,
