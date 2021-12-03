@@ -26,7 +26,7 @@ For this project, we are focussing on creating an AI that can play the game usin
 The artificial intelligences are based on a neural network trained with reinforcement learning.
 
 The trained network takes the map in input (the values/shape of the input depends on the training environment,
-please refer to the training environment section) and returns the probability to select: up or down or left or right.
+please refer to the training environment section) and returns the probability to select: left or right or up or down.
 
 # Training environment
 

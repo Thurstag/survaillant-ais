@@ -6,7 +6,7 @@
  */
 import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
 import fs from "fs";
-import { array, path } from "../common/argparse.js";
+import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
 import { RewardPolicy } from "../common/game/environment/reward.js";
 import { Generator } from "../common/game/environment/state/states.js";
 import { Representation } from "../common/game/environment/state/tensor.js";
@@ -61,6 +61,18 @@ function parseArguments() {
         type: "int",
         required: false,
         help: `Radius used in flashlight mode (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.NORMAL_MAP_WIDTH}`, {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        required: false,
+        help: `Maximum map's width that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be width of the widest map of the training maps (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.NORMAL_MAP_HEIGHT}`, {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        required: false,
+        help: `Maximum map's height that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be height of the tallest map of the training maps (${REFER_STATE_README})`
     });
     parser.add_argument(`--${Argument.REPRESENTATION}`, {
         type: "str",

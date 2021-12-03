@@ -9,6 +9,7 @@ import { before, beforeEach, describe, it } from "mocha";
 import path from "path";
 import TimeUnit from "timeunit";
 import url from "url";
+import { AUTO_ARGUMENT_VALUE } from "../../src/common/argparse.js";
 import { ListMapEnvironment, SingleMapEnvironment } from "../../src/common/game/environment/environments.js";
 import loadFrom from "../../src/common/game/environment/importer.js";
 import { RewardPolicy } from "../../src/common/game/environment/reward.js";
@@ -98,6 +99,9 @@ describe("Training integration tests", () => {
                     args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
                     if (isFlashlight) {
                         args[Argument.FLASHLIGHT_RADIUS] = FLASHLIGHT_RADIUS;
+                    } else {
+                        args[PpoArgument.NORMAL_MAP_WIDTH] = AUTO_ARGUMENT_VALUE;
+                        args[PpoArgument.NORMAL_MAP_HEIGHT] = AUTO_ARGUMENT_VALUE;
                     }
 
                     // Train network
@@ -143,6 +147,8 @@ describe("Training integration tests", () => {
         args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
         args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
         args[PpoArgument.BASE_NETWORK_FOLDER] = path.join(__dirname, "assets", "ppo");
+        args[PpoArgument.NORMAL_MAP_WIDTH] = map.board.dimX;
+        args[PpoArgument.NORMAL_MAP_HEIGHT] = map.board.dimY;
 
         // Train network
         await trainPpo(args);
@@ -159,8 +165,8 @@ describe("Training integration tests", () => {
 
         const stateParams = {};
         stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = maps.reduce((a, b) => {
-            a[0] = Math.max(b.board.dimX, a[0]);
-            a[1] = Math.max(b.board.dimY, a[1]);
+            a[0] = Math.max(b.board.dimX + 1, a[0]);
+            a[1] = Math.max(b.board.dimY + 1, a[1]);
 
             return a;
         }, [ 0, 0 ]);
@@ -173,6 +179,8 @@ describe("Training integration tests", () => {
         args[PpoArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
         args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
         args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
+        args[PpoArgument.NORMAL_MAP_WIDTH] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][0];
+        args[PpoArgument.NORMAL_MAP_HEIGHT] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][1];
 
         // Train network
         await trainPpo(args);

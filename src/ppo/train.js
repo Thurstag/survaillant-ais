@@ -6,6 +6,7 @@
  */
 import fs from "fs";
 import { join, sep } from "path";
+import { AUTO_ARGUMENT_VALUE } from "../common/argparse.js";
 import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environment/environments.js";
 import { createPolicy } from "../common/game/environment/reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
@@ -27,7 +28,9 @@ const Argument = {
     BASE_NETWORK_FOLDER: "base_network_folder",
     REPRESENTATION: "representation",
     STATE_MODE: "state_mode",
-    FLASHLIGHT_RADIUS: "flashlight_radius" // TODO: Add dim parameters
+    FLASHLIGHT_RADIUS: "flashlight_radius",
+    NORMAL_MAP_WIDTH: "input_map_width",
+    NORMAL_MAP_HEIGHT: "input_map_height"
 };
 
 /**
@@ -54,8 +57,25 @@ async function train(args) {
             case Generator.FLASHLIGHT:
                 return new FlashlightStateGenerator(args[Argument.FLASHLIGHT_RADIUS], representation);
 
-            case Generator.NORMAL:
-                return new NormalStateGenerator(maps.reduce((a, m) => Math.max(a, m.board.dimX), 0), maps.reduce((a, m) => Math.max(a, m.board.dimY), 0), representation);
+            case Generator.NORMAL: {
+                const width = args[Argument.NORMAL_MAP_WIDTH];
+                const height = args[Argument.NORMAL_MAP_HEIGHT];
+
+                const autoWidth = width === AUTO_ARGUMENT_VALUE;
+                const autoHeight = height === AUTO_ARGUMENT_VALUE;
+                if (autoWidth || autoHeight) {
+                    const [ maxWidth, maxHeight ] = maps.reduce((a, m) => {
+                        a[0] = Math.max(a[0], m.board.dimX);
+                        a[1] = Math.max(a[1], m.board.dimY);
+
+                        return a;
+                    }, [ 0, 0 ]);
+
+                    return new NormalStateGenerator(autoWidth ? maxWidth : width, autoHeight ? maxHeight : height, representation);
+                } else {
+                    return new NormalStateGenerator(width, height, representation);
+                }
+            }
 
             default:
                 throw new Error("Unknown state mode: " + mode);
