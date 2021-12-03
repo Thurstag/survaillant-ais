@@ -4,7 +4,10 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import { Lazy } from "@tsdotnet/lazy";
 import fs from "fs";
+import path from "path";
+import url from "url";
 import { GameStats } from "../../common/game/stats.js";
 import Game from "./models/games/Game.js";
 import Map from "./models/games/Map.js";
@@ -13,29 +16,15 @@ process.on("SIGINT", () => {
     process.exit();
 });
 
-// ======== data ========
-let maps = [];
+const mapLoader = new Lazy(() => {
+    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+    const mapFolder = path.resolve(__dirname, path.join("..", "assets", "dungeons"));
 
-// Init
-// TODO: Remove this because it slows down scripts and scripts should have a parameter to select a map
-loadData();
-
-function loadData() {
-    const mapFolder = "src/survaillant/assets/dungeons";
-    let mapFiles = fs.readdirSync(mapFolder);
-    mapFiles.forEach(dugeon => {
-        // Read map json file:
-        let mapJson = JSON.parse(fs.readFileSync(mapFolder + "/" + dugeon + "/info.json", "utf8"));
-        let map = new Map(mapJson);
-        maps.push(map);
-    });
-}
-
+    return fs.readdirSync(mapFolder).map(dungeon => new Map(JSON.parse(fs.readFileSync(mapFolder + "/" + dungeon + "/info.json", "utf8"))));
+});
 
 const Survaillant = {
-    getMaps: () => {
-        return maps;
-    },
+    getMaps: () => mapLoader.value,
     createGame: (map) => {
         return new SurvaillantGame(map, "solo");
     },
