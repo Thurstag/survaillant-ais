@@ -24,7 +24,8 @@ const Argument = {
     NETWORK: "network",
     BACKEND: "backend",
     GAMES: "games",
-    STATS_FOLDER: "stats"
+    STATS_FOLDER: "stats",
+    TURNS_LIMIT: "turns_limit"
 };
 
 /**
@@ -33,6 +34,8 @@ const Argument = {
  * @return {Object} Parsed arguments
  */
 function parseArguments() {
+    const TURNS_LIMIT = 1111;
+
     const parser = new ArgumentParser({
         description: "Validation script, it loads the network that can take decisions and makes it play on the given maps",
         formatter_class: ArgumentDefaultsHelpFormatter
@@ -64,6 +67,12 @@ function parseArguments() {
         required: false,
         help: "Path to a folder where games statistics will be saved"
     });
+    parser.add_argument(`--${Argument.TURNS_LIMIT}`, {
+        default: TURNS_LIMIT,
+        type: "int",
+        required: false,
+        help: `Limit of the number of turns in a game. If the game isn't finished in ${TURNS_LIMIT} turns, the game over reason is undefined`
+    });
     parser.add_argument(`--${Argument.BACKEND}`, {
         default: BACKEND.NONE.toLowerCase(),
         type: "str",
@@ -93,6 +102,7 @@ async function main() {
         join(networkFolder, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME), fs.readFileSync);
 
     const games = args[Argument.GAMES];
+    const turnsLimit = args[Argument.TURNS_LIMIT];
 
     // Run maps
     const stats = new GamesStats();
@@ -104,12 +114,18 @@ async function main() {
         for (let i = 0; i < games; i++) {
             env.reset();
 
-            let done;
-            do {
+            let j;
+            for (j = 0; j < turnsLimit; j++) {
                 // Ask network its prediction
                 const action = network.predict(env.state().expandDims()).dataSync()[0];
-                done = env.step(action).done;
-            } while (!done);
+                if (env.step(action).done) {
+                    break;
+                }
+            }
+            if (j >= turnsLimit) {
+                env.stats.add(env.game.stats);
+            }
+
             progress.tick();
         }
         stats.addAll(env.stats);

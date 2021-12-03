@@ -6,7 +6,7 @@
  */
 import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
 import fs from "fs";
-import { array, path } from "../common/argparse.js";
+import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
 import { RewardPolicy } from "../common/game/environment/reward.js";
 import { Generator } from "../common/game/environment/state/states.js";
 import { Representation } from "../common/game/environment/state/tensor.js";
@@ -14,6 +14,8 @@ import LOGGER from "../common/logger.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter, PpoHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
 import { Argument, train } from "./train.js";
+
+const REFER_STATE_README = "Please refer to the 'State generator' section of README.md for more information";
 
 /**
  * Parse program's arguments
@@ -52,13 +54,31 @@ function parseArguments() {
         type: "str",
         choices: Object.values(Generator).map(g => g.toLowerCase()),
         required: true,
-        help: "Mode used to generate game's state (Please refer to the 'State generator' section of README.md for more information)"
+        help: `Mode used to generate game's state (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.FLASHLIGHT_RADIUS}`, {
+        default: 3,
+        type: "int",
+        required: false,
+        help: `Radius used in flashlight mode (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.NORMAL_MAP_WIDTH}`, {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        required: false,
+        help: `Maximum map's width that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be width of the widest map of the training maps (${REFER_STATE_README})`
+    });
+    parser.add_argument(`--${Argument.NORMAL_MAP_HEIGHT}`, {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        required: false,
+        help: `Maximum map's height that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be height of the tallest map of the training maps (${REFER_STATE_README})`
     });
     parser.add_argument(`--${Argument.REPRESENTATION}`, {
         type: "str",
         choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
-        help: "Representation of the game's state (Please refer to the 'State generator' section of README.md for more information)"
+        help: "Representation of the game's state (" + REFER_STATE_README + ")"
     });
     parser.add_argument(`--${Argument.NETWORK_FOLDER}`, {
         type: path,
