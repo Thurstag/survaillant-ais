@@ -121,3 +121,4 @@ dist
 # Jetbrains config
 .idea/
 *.h5
+modelsweight_*

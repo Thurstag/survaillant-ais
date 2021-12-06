@@ -3,8 +3,8 @@ import * as fs from "fs";
 import Survaillant from "../../survaillant/src/index.js";
 import { flashlight } from "../../common/states.js";
 
-const PATH_TO_MODEL = "file://modelsweight_ppo5/save_20/model.json";
-const CSV_EXPORT_NAME = "PPO_all_flashlight3_3_20.csv";
+const PATH_TO_MODEL = "file://modelsweight_ppo6/save350/model.json";
+const CSV_EXPORT_NAME = "PPO_all_flashlight3_4_350.csv";
 const NB_GAMES = 1000;
 const RADIUS = 3;
 let maps = Survaillant.getMaps();
