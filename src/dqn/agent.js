@@ -154,7 +154,7 @@ class SurvaillantGameAgent {
                     // update the the target network with new weights
                     this.modelTarget.setWeights();
                     // Log details
-                    console.log("running reward: "+ episodeReward + "  at episode " + episodeCount + ", frame count " + frameCount + " score : " + game.getScores());
+                    LOGGER.info("running reward: "+ episodeReward + "  at episode " + episodeCount + ", frame count " + frameCount + " score : " + game.getScores());
                 }
     
                 // Limit the state and reward history

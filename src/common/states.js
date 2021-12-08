@@ -89,7 +89,7 @@ function flashlight(game, radius) {
         if (x >= minX && x < maxX && y >= minY && y < maxY) {
             state.set(entity, toLocalX(x), toLocalY(y), layer);
         }
-    }
+    };
 
     // Iterate over entities and update state
     game.forEach(
