@@ -4,8 +4,11 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
-
+import { Lazy } from "@tsdotnet/lazy";
 import fs from "fs";
+import path from "path";
+import url from "url";
+import { GameStats } from "../../common/game/stats.js";
 import Game from "./models/games/Game.js";
 import Map from "./models/games/Map.js";
 
@@ -13,28 +16,15 @@ process.on("SIGINT", () => {
     process.exit();
 });
 
-// ======== data ========
-let maps = [];
+const mapLoader = new Lazy(() => {
+    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+    const mapFolder = path.resolve(__dirname, path.join("..", "assets", "dungeons"));
 
-// Init
-loadData();
-
-function loadData() {
-    const mapFolder = "src/survaillant/assets/dungeons";
-    let mapFiles = fs.readdirSync(mapFolder);
-    mapFiles.forEach(dugeon => {
-        // Read map json file:
-        let mapJson = JSON.parse(fs.readFileSync(mapFolder + "/" + dugeon + "/info.json", "utf8"));
-        let map = new Map(mapJson);
-        maps.push(map);
-    });
-}
-
+    return fs.readdirSync(mapFolder).map(dungeon => new Map(JSON.parse(fs.readFileSync(mapFolder + "/" + dungeon + "/info.json", "utf8"))));
+});
 
 const Survaillant = {
-    getMaps: () => {
-        return maps;
-    },
+    getMaps: () => mapLoader.value,
     createGame: (map) => {
         return new SurvaillantGame(map, "solo");
     },
@@ -42,17 +32,29 @@ const Survaillant = {
     ActionConsequence: {
         MOVED: "MOVED",
         BAD_MOVEMENT: "BAD_MOVEMENT",
-        GAME_OVER: "GAME_OVER"
+        GAME_OVER: "GAME_OVER",
+        KILL: "KILL"
     }
 };
 
 // TODO: Doc
 class SurvaillantGame {
+    #stats;
+
     // TODO: Doc
     constructor(map) {
         this.game = new Game(map, "solo");
-        let dummyClient = { id: 0, account: null };
-        this.game.addPayer(dummyClient, "A furtive bot");
+        this.game.addPayer({ id: 0, account: null }, "A furtive bot");
+        this.#stats = new GameStats(this);
+    }
+
+    /**
+     * Get game's statistics
+     *
+     * @return {GameStats} Statistics
+     */
+    get stats() {
+        return this.#stats;
     }
 
     // TODO: Doc
@@ -60,14 +62,19 @@ class SurvaillantGame {
         return this.game.get();
     }
 
-    // TODO: Doc
-    forEach(onChest, onMonster, onTrap, onMonsterSpawn) {
-        let state = this.game.get();
+    /**
+     * Iterate over game's entities and call the given callback when an entity is encountered
+     *
+     * @param {function(Entity|MonsterSpawn)} onEntity
+     */
+    forEach(onEntity) {
+        let gameInstance = this.game;
 
-        state.monsters.forEach(monster => onMonster(monster.pos.x, monster.pos.y));
-        state.chests.forEach(onChest);
-        state.traps.forEach(onTrap);
-        state.monsterSpawns.forEach(onMonsterSpawn);
+        gameInstance.monsters.forEach(onEntity);
+        gameInstance.chests.forEach(onEntity);
+        gameInstance.traps.forEach(onEntity);
+        gameInstance.monsterSpawns.forEach(onEntity);
+        gameInstance.players.forEach(onEntity);
     }
 
     // TODO: Doc
@@ -75,18 +82,24 @@ class SurvaillantGame {
         let player = this.game.players[0];
 
         // Params check
-        if (dx === undefined || dy === undefined) throw "dx and dy requiered";
+        if (dx === undefined || dy === undefined) throw "dx and dy required";
 
         let choiceStatus = this.game.checkPlayerMovementChoice(player, { dx, dy });
-        if (choiceStatus.badMovement) return Survaillant.ActionConsequence.BAD_MOVEMENT;
+        if (choiceStatus.badMovement) {
+            return this.#stats.gameOverReason = Survaillant.ActionConsequence.BAD_MOVEMENT;
+        }
 
         // Good movement
+        const oldKillCount = this.game.nbKilledMonsters;
         if (this.game.allMvmtDone()) {
             this.game.nextTurn();
 
-            if (this.game.gameOver) return Survaillant.ActionConsequence.GAME_OVER;
+            if (this.game.gameOver) {
+                return this.#stats.gameOverReason = Survaillant.ActionConsequence.GAME_OVER;
+            }
         }
-        return Survaillant.ActionConsequence.MOVED;
+
+        return this.game.nbKilledMonsters > oldKillCount ? Survaillant.ActionConsequence.KILL : Survaillant.ActionConsequence.MOVED;
     }
 
     // TODO: Doc
@@ -96,7 +109,7 @@ class SurvaillantGame {
         let player = this.game.player[0];
 
         if (item == undefined || !availableItems.includes(item))
-            throw "A correct Item is requiered";
+            throw "A correct Item is required";
 
         if (player.inventory[item] == 0) // The player has no item
             return -1;
@@ -104,11 +117,6 @@ class SurvaillantGame {
         // set item to the player
         player.selectedItem = item;
         player.nextMove = null;
-    }
-
-    // TODO: Doc
-    getScores() {
-        return this.game.getScores();
     }
 }
 

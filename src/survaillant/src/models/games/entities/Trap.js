@@ -5,9 +5,9 @@
  * Refer to the LICENSE file included.
  */
 
-import Entity from "../Entity.js";
+import { VisitableEntity } from "../../../../../common/game/environment/state/entity_visitor.js";
 
-class Trap extends Entity {
+class Trap extends VisitableEntity {
     constructor(loopStart, name, pos) {
         super(name, pos);
         this.loop = loopStart;
@@ -27,7 +27,11 @@ class Trap extends Entity {
         if (this.loop > 2) {
             this.loop = 3 - this.loopTime;
         }
-        return this.loop == 2;
+        return this.loop === 2;
+    }
+
+    visit(visitor) {
+        return visitor.acceptTrap(this);
     }
 }
 export default Trap;
