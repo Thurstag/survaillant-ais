@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 
-import { createSurvaillantDeepQNetwork } from "./network.js";
+import { fromZero } from "./network.js";
 
 import tf from "@tensorflow/tfjs";
 
@@ -13,25 +13,31 @@ import { flashlight } from "../common/states.js";
 
 import SurvaillantGame from "../survaillant/src/index.js";
 
+import LOGGER from "../common/logger.js";
+
+import { TrainingInformationKey } from "../common/game/training.js";
+import { v4 as uuidv4 } from "uuid";
 /**
   * TODO
   */
 class SurvaillantGameAgent {
 
-    constructor(config) {
-        this.model = createSurvaillantDeepQNetwork(config.height, config.width);
-        this.modelTarget = createSurvaillantDeepQNetwork(config.height, config.width);
+    constructor(config, env) {
+        this.model = fromZero(config.height, config.width);
+        this.modelTarget = fromZero(config.height, config.width);
         
         this.config = config;
 
-        this.model.summary();
+        this.env = env;
+
+        this.model.printSummary();
     }
 
     /**
      * Train function for agent
      * 
      */
-    train() {
+    async train(save) {
         
         let actionHistory = [];
         let stateHistory = [];
@@ -39,18 +45,18 @@ class SurvaillantGameAgent {
         let rewardsHistory = [];
         let doneHistory = [];
         let episodeRewardHistory = [];
-        let optimizer = tf.train.adam(0.00025);
         
         let action = -1;
         
-        let episodeCount = 0;
         let frameCount = 0;
         let epsilonInterval = this.config.epsilonMax - this.config.epsilonMin;
     
-        let old = 1000; 
+        let old = 2; 
     
-        for(let m =0; m < old ; m++) {
+        for(let episodeCount =0; episodeCount < old ; episodeCount++) {
     
+            LOGGER.info(`${episodeCount}/${old}`);
+
             const game = SurvaillantGame.createGame(SurvaillantGame.getMaps()[0]); 
             const gameG = () => flashlight(game, 4);
     
@@ -59,10 +65,10 @@ class SurvaillantGameAgent {
             let episodeReward = 0;
     
             for(let i = 0; i < this.config.maxStepsPerEpisode; i++) {
-                    
+
                 frameCount += 1;
     
-                if(frameCount < this.config.espilonRandomFrames || this.config.epsilon > Math.random()) {
+                if(frameCount < this.config.espilonRanomFrames || this.config.epsilon > Math.random()) {
                     action = Math.floor(Math.random() * this.config.actions);
                 } else {
     
@@ -102,8 +108,8 @@ class SurvaillantGameAgent {
                     const loss = () => {
     
                         // Get indices of samples for replay buffers
-                        let indices = tf.randomUniform([ this.config.batchSize ], 0, doneHistory.length - 1).arraySync().map(Math.floor);
-    
+                        let indices = tf.randomUniform([ this.config.batchSize ], 0, doneHistory.length, "int32").arraySync().map(Math.floor);
+
                         // Using list comprehension to sample from replay buffer
                         let stateSample = indices.map(i => stateHistory[i].expandDims());
                         let stateNextSample = indices.map(i => stateNextHistory[i].expandDims());
@@ -140,15 +146,13 @@ class SurvaillantGameAgent {
                     };
     
                     // Backpropagation
-                    
-                    let grads = tf.variableGrads(loss);
-    
-                    optimizer.applyGradients(grads.grads);
+                    this.model.train("dqnPolicy", loss);
+                    this.modelTarget.train("dqnPolicy", loss);
                 }
                 
                 if(frameCount % this.config.updateTargetNetwork == 0) {
                     // update the the target network with new weights
-                    this.modelTarget.setWeights(this.model.getWeights());
+                    this.modelTarget.setWeights();
                     // Log details
                     console.log("running reward: "+ episodeReward + "  at episode " + episodeCount + ", frame count " + frameCount + " score : " + game.getScores());
                 }
@@ -173,32 +177,16 @@ class SurvaillantGameAgent {
             if(episodeRewardHistory.length > 100){
                 episodeRewardHistory.shift();
             }
-    
-            episodeCount += 1;
+
+            const info = {};
+            info[TrainingInformationKey.AGENT] = "DQN";
+            info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
+            info[TrainingInformationKey.ENV] = this.env.info();
+            info[TrainingInformationKey.ID] = uuidv4();
+
+            await save(episodeCount, info, this.model);
         }
     }
-
-    /**
-     * TODO
-     */
-    restart() {
-
-    }
-
-    /**
-     * TODO 
-     */
-    playStep(action) {
-        console.log(action);
-    }
-
-    /**
-     * TODO
-     */
-    trainReplay() {
-
-    }
-
 }
 
 export default SurvaillantGameAgent;
