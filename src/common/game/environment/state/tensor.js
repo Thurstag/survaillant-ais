@@ -217,15 +217,84 @@ class ExhaustiveEntityLayer extends EntityVisitor {
     }
 }
 
+/**
+ * Class defining the value for each entity in the real representation
+ */
+class RealEntityValue extends EntityVisitor {
+    acceptNone(_) { // eslint-disable-line no-unused-vars
+        return 0;
+    }
+
+    acceptWall(_) { // eslint-disable-line no-unused-vars
+        return 1;
+    }
+
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
+        return 1;
+    }
+
+    acceptChest(chest) {
+        return !chest.dead ? 2 : 9 - chest.timeBeforeSpawn;
+    }
+
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
+        return 2;
+    }
+
+    acceptTrap(trap) {
+        return trap.loop + 3;
+    }
+
+    acceptMonsterSpawn(spawn) {
+        return 9 - spawn.timeBeforeSpawn;
+    }
+}
+
+/**
+ * Class defining the layer for each entity in the real representation
+ */
+class RealEntityLayer extends EntityVisitor {
+    layers = 2;
+
+    acceptNone(_) { // eslint-disable-line no-unused-vars
+        return NO_LAYER;
+    }
+
+    acceptWall(_) { // eslint-disable-line no-unused-vars
+        return 0;
+    }
+
+    acceptPlayer(_) { // eslint-disable-line no-unused-vars
+        return 1;
+    }
+
+    acceptChest(_) { // eslint-disable-line no-unused-vars
+        return 0;
+    }
+
+    acceptMonster(_) { // eslint-disable-line no-unused-vars
+        return 1;
+    }
+
+    acceptTrap(_) { // eslint-disable-line no-unused-vars
+        return 0;
+    }
+
+    acceptMonsterSpawn(_) { // eslint-disable-line no-unused-vars
+        return 0;
+    }
+}
 
 const Representation = {
     SUMMARY: "SUMMARY",
-    EXHAUSTIVE: "EXHAUSTIVE"
+    EXHAUSTIVE: "EXHAUSTIVE",
+    REAL: "REAL"
 };
 
 const EntitiesRepresentation = {};
 EntitiesRepresentation[Representation.SUMMARY] = new TensorEntitiesRepresentation(new SummaryEntityLayer(), new SummaryEntityValue(), Representation.SUMMARY.toLowerCase());
 EntitiesRepresentation[Representation.EXHAUSTIVE] = new TensorEntitiesRepresentation(new ExhaustiveEntityLayer(), new ExhaustiveEntityValue(), Representation.EXHAUSTIVE.toLowerCase());
+EntitiesRepresentation[Representation.REAL] = new TensorEntitiesRepresentation(new RealEntityLayer(), new RealEntityValue(), Representation.REAL.toLowerCase());
 
 
 export { EntitiesRepresentation, Representation, NO_LAYER };
