@@ -197,7 +197,7 @@ class ListMapEnvironment extends Environment {
     info() {
         const info = {};
         info[TrainingInformationKey.ENV_KEYS.TYPE] = ListMapEnvironment.ID;
-        info[TrainingInformationKey.ENV_KEYS.MAPS] =  this.#maps.map(m => m.name);
+        info[TrainingInformationKey.ENV_KEYS.MAPS] = this.#maps.map(m => m.name);
         info[TrainingInformationKey.ENV_KEYS.POLICY] = this.policy.name;
         info[TrainingInformationKey.ENV_KEYS.STATE] = this.stateGenerator.info();
 

@@ -249,21 +249,21 @@ class GameStats {
     }
 
     /**
-     * Add a reward
-     *
-     * @param {number} reward Reward
-     */
-    addReward(reward) {
-        this.#rewards += reward;
-    }
-
-    /**
      * Get the sum of rewards obtained
      *
      * @return {number} Rewards
      */
     get rewards() {
         return this.#rewards;
+    }
+
+    /**
+     * Add a reward
+     *
+     * @param {number} reward Reward
+     */
+    addReward(reward) {
+        this.#rewards += reward;
     }
 
     /**
