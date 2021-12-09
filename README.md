@@ -100,6 +100,11 @@ on the last dimension).
 In the summary mode, monsters and players are on the same level and other elements are on another level. Every entity
 and its states are represented with a unique value.
 
+### Real
+
+In the real mode, monsters and players are on the same level and other elements are on another level. Every entity
+are represented only if they are visible with a unique value. Monster spawns and chest spawns are represented with the same values.
+
 ### Exhaustive
 
 In exhaustive mode, walls are on a level, players are on a level, monsters are on a level,
