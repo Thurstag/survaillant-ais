@@ -6,10 +6,10 @@
  */
 import tf from "@tensorflow/tfjs";
 import TimeUnit from "timeunit";
+import { v4 as uuidv4 } from "uuid";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
-import { v4 as uuidv4 } from "uuid";
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
@@ -170,16 +170,18 @@ class PpoAgent {
      * @param {PpoTrainingNetwork} network Network to train
      * @param {Environment} env Training environment to use
      * @param {function(number, Object, PpoTrainingNetwork)} onEpoch Callback called at the end of each epoch (arguments: current epoch, training information, network)
-     * @return {Promise<String>} Training identifier
+     * @return {Promise<[String, GamesStats[]]>} Training identifier and Games statistics per epoch
      */
     async train(network, env, onEpoch) {
+        const stats = [];
+
         for (let epoch = 0; epoch < this.#epochs; epoch++) {
             tf.tidy(() => {
                 // Create history buffer
                 const buffer = new TrajectoriesBuffer(this.#stepsPerEpoch, this.#gamma, this.#lam);
 
                 // Play
-                this.#play(network, buffer, env, epoch);
+                stats.push(this.#play(network, buffer, env, epoch));
 
                 // Train network
                 this.#trainOnBuffer(network, buffer, epoch);
@@ -194,7 +196,7 @@ class PpoAgent {
             await onEpoch(epoch, info, network);
         }
 
-        return `${PpoAgent.ID}_${this.#epochs}_${env.id()}`;
+        return [ `${PpoAgent.ID}_${this.#epochs}_${env.id()}`, stats ];
     }
 
     /**
@@ -204,6 +206,7 @@ class PpoAgent {
      * @param {TrajectoriesBuffer} buffer Buffer where games' data should be stored
      * @param {Environment} env Training environment to use
      * @param {number} epoch Current epoch
+     * @return {GamesStats} Games statistics
      */
     #play(network, buffer, env, epoch) {
         const funcStart = process.hrtime.bigint();
@@ -251,6 +254,8 @@ class PpoAgent {
         LOGGER.debug(`[Epoch ${epoch}] Game steps done in ${TimeUnit.nanoseconds.toSeconds(Number(process.hrtime.bigint() - funcStart))}s. ` +
             `Rewards: (mean=${statsSummary.rewards.mean}, std=${statsSummary.rewards.std}, min=${statsSummary.rewards.min}, max=${statsSummary.rewards.max}). ` +
             `Turns: (mean=${statsSummary.turns.mean}, std=${statsSummary.turns.std}, min=${statsSummary.turns.min}, max=${statsSummary.turns.max}). Game step/s: ${opsRecorder.ops()}`);
+
+        return stats;
     }
 
     /**

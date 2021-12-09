@@ -11,6 +11,7 @@ import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environ
 import { createPolicy } from "../common/game/environment/reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
+import { GamesStats } from "../common/game/stats.js";
 import LOGGER from "../common/logger.js";
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import Map from "../survaillant/src/models/games/Map.js";
@@ -102,7 +103,7 @@ async function train(args) {
     const networkExportFolder = args[Argument.NETWORK_FOLDER];
     const agent = new PpoAgent(args[Argument.EPOCHS], args[Hyperparameter.STEPS_PER_EPOCH], args[Hyperparameter.TRAIN_POLICY_ITERATIONS], args[Hyperparameter.TRAIN_VALUE_ITERATIONS],
         args[Hyperparameter.TARGET_KL], args[Hyperparameter.CLIP_RATIO], args[Hyperparameter.GAMMA], args[Hyperparameter.LAM]);
-    const id = await agent.train(network, env, async (epoch, metadata, network) => {
+    const [ id, statsPerEpoch ] = await agent.train(network, env, async (epoch, metadata, network) => {
         try {
             await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
             LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
@@ -116,7 +117,8 @@ async function train(args) {
     const statsFolder = args[Argument.STATS_FOLDER];
     if (statsFolder !== undefined && statsFolder !== null) {
         const statsFile = join(statsFolder, id + ".csv");
-        await env.stats.writeTo(statsFile);
+
+        await GamesStats.writeTo(statsPerEpoch, statsFile);
         LOGGER.info(`Training statistics saved in ${statsFile}`);
     }
 }
