@@ -11,6 +11,8 @@ import Survaillant from "../../survaillant/src/index.js";
  * Statistics of multiple games
  */
 class GamesStats {
+    static #HEADERS = "mapName,score,nbTurn,nbKilled,nbChests,comboScore,gameOverReason";
+
     #stats = [];
 
     /**
@@ -126,7 +128,7 @@ class GamesStats {
      * @return {string} CSV with the following columns: mapName, score, nbTurn, nbKilled, nbChests, comboScore, gameOverReason
      */
     toCSV() {
-        return `mapName,score,nbTurn,nbKilled,nbChests,comboScore,gameOverReason\n${this.#stats.map(s => s.toCSV()).join("\n")}`;
+        return `${GamesStats.#HEADERS}\n${this.#stats.map(s => s.toCSV()).join("\n")}`;
     }
 
     /**
@@ -137,6 +139,17 @@ class GamesStats {
      */
     async writeTo(file) {
         await fs.writeFile(file, this.toCSV(), "utf-8");
+    }
+
+    /**
+     * Write statistics per epoch into the given file (format: CSV)$
+     *
+     * @param stats Games statistics per epoch
+     * @param file Path to the file
+     * @return {Promise<void>} Promise
+     */
+    static async writeTo(stats, file) {
+        await fs.writeFile(file, `${GamesStats.#HEADERS},epoch\n${stats.flatMap((games, epoch) => games.#stats.map(g => `${g.toCSV()},${epoch}`)).join("\n")}`);
     }
 }
 
