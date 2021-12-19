@@ -10,6 +10,7 @@ import { fromZero } from "./network.js";
 import tf from "@tensorflow/tfjs";
 
 import LOGGER from "../common/logger.js";
+import { GamesStats } from "../common/game/stats.js";
 
 import { TrainingInformationKey } from "../common/game/training.js";
 import { v4 as uuidv4 } from "uuid";
@@ -39,6 +40,8 @@ class SurvaillantGameAgent {
         let rewardsHistory = [];
         let doneHistory = [];
         let episodeRewardHistory = [];
+
+        const stats = new GamesStats();
 
         let action = -1;
 
@@ -130,12 +133,12 @@ class SurvaillantGameAgent {
 
                     // Backpropagation
                     this.model.train("dqnPolicy", loss);
-                    this.modelTarget.train("dqnPolicy", loss);
                 }
 
                 if (frameCount % this.config.updateTargetNetwork == 0) {
+
                     // update the the target network with new weights
-                    this.modelTarget.setWeights();
+                    this.modelTarget.setWeights(this.model.getWeights());
                     // Log details
                     LOGGER.info("running reward: " + episodeReward + "  at episode " + episodeCount + ", frame count " + frameCount);
                 }
@@ -149,14 +152,16 @@ class SurvaillantGameAgent {
                     doneHistory.shift();
                 }
 
+                stepCount = i;
+
                 if (done) {
+
+                    stats.add(this.env.game.stats);
 
                     this.env.reset();
 
                     break;
-                }
-
-                stepCount = i;
+                }    
             }
 
             LOGGER.info("Score: " + episodeReward +  "  at epoche " + `${episodeCount}/${old}` + " with " + stepCount + " steps");

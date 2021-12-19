@@ -57,8 +57,12 @@ class DQNTrainingNetwork extends SurvaillantTrainingNetwork {
         return this.network().predict(state);
     }
 
-    setWeights() {
-        return this.network().setWeights(this.network().getWeights());
+    setWeights(weights) {
+        return this.network().setWeights(weights);
+    }
+
+    getWeights() {
+        return this.network().getWeights();
     }
 }
 

@@ -69,7 +69,7 @@ function parseArguments() {
     });
     parser.add_argument("--updateTargetNetwork", {
         type: "int",
-        default: 10000,
+        default: 100,
         help: "How often to update the target network"
     });
     parser.add_argument("--batchSize", {
