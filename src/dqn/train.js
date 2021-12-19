@@ -5,8 +5,23 @@
  * Refer to the LICENSE file included.
  */
 import { ArgumentParser } from "argparse";
+import fs from "fs";
+import { join, sep } from "path";
+import { array, path } from "../common/argparse.js";
+
+import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environment/environments.js";
+import { FlashlightStateGenerator } from "../common/game/environment/state/states.js";
+import { Representation } from "../common/game/environment/state/tensor.js";
+import { createPolicy, RewardPolicy } from "../common/game/environment/reward.js";
+import { SurvaillantTrainingNetwork } from "../common/network.js";
+import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
 
 import SurvaillantGameAgent from "./agent.js";
+import Map from "../survaillant/src/models/games/Map.js";
+
+import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
+
+import LOGGER from "../common/logger.js";
 
 /**
  * Parse program's arguments
@@ -17,80 +32,107 @@ function parseArguments() {
     const parser = new ArgumentParser({
         description: "Training script for a DQN model that plays Survaillant."
     });
-    parser.addArgument("--height", {
+    parser.add_argument("--height", {
         type: "int",
-        defaultValue: 9,
+        default: 9,
         help: "Height of the game board."
     });
-    parser.addArgument("--width", {
+    parser.add_argument("--width", {
         type: "int",
-        defaultValue: 9,
+        default: 9,
         help: "Width of the game board."
     });
-    parser.addArgument("--actions", {
+    parser.add_argument("--actions", {
         type: "float",
-        defaultValue: 4,
+        default: 4,
         help: "Number of actions to provide"
     });
-    parser.addArgument("--espilonRandomFrames", {
+    parser.add_argument("--espilonRandomFrames", {
         type: "int",
-        defaultValue: 50000,
+        default: 50000,
         help: "Number of frames to take random action and observe output."
     });
-    parser.addArgument("--espilonGreedyFrames", {
+    parser.add_argument("--espilonGreedyFrames", {
         type: "float",
-        defaultValue: 1000000.0,
+        default: 1000000.0,
         help: "Number of frames for exploration."
     });
-    parser.addArgument("--maxMemoryLength", {
+    parser.add_argument("--maxMemoryLength", {
         type: "int",
-        defaultValue: 100000,
+        default: 100000,
         help: "Initial value of epsilon, used for the epsilon-greedy algorithm."
     });
-    parser.addArgument("--updateAfterNbActions", {
+    parser.add_argument("--updateAfterNbActions", {
         type: "int",
-        defaultValue: 4,
+        default: 4,
         help: "Number of actions before training the model."
     });
-    parser.addArgument("--updateTargetNetwork", {
+    parser.add_argument("--updateTargetNetwork", {
         type: "int",
-        defaultValue: 10000,
+        default: 10000,
         help: "How often to update the target network"
     });
-    parser.addArgument("--batchSize", {
+    parser.add_argument("--batchSize", {
         type: "int",
-        defaultValue: 32,
+        default: 32,
         help: "Batch size for DQN training."
     });
-    parser.addArgument("--gamma", {
+    parser.add_argument("--gamma", {
         type: "float",
-        defaultValue: 0.99,
+        default: 0.99,
         help: "Reward discount rate."
-    }) ;
-    parser.addArgument("--maxStepsPerEpisode", {
+    });
+    parser.add_argument("--maxStepsPerEpisode", {
         type: "int",
-        defaultValue: 10000,
+        default: 10000,
         help: "Max steps per episodes."
     });
-    parser.addArgument("--savePath", {
-        type: "string",
-        defaultValue: "./models/dqn",
+    parser.add_argument("--savePath", {
+        type: "str",
+        default: "./models/dqn",
         help: "File path to which the online DQN will be saved after training."
     });
-    parser.addArgument("--epsilonMin", {
+    parser.add_argument("--epsilonMin", {
         type: "float",
-        defaultValue: 0.1,
+        default: 0.1,
         help: "Epsilon min value"
     });
-    parser.addArgument("--epsilonMax", {
+    parser.add_argument("--epsilonMax", {
         type: "float",
-        defaultValue: 1,
+        default: 1,
         help: "Epsilon max value"
     });
-    parser.addArgument("--epsilon", {
+    parser.add_argument("--epsilon", {
         type: "float",
-        defaultValue: 0.5,
+        default: 0.2,
         help: "Epsilon max value"
+    });
+    parser.add_argument("--maps", {
+        type: array(path => {
+            if (!fs.existsSync(path)) {
+                throw new Error(`${path} doesn't exist`);
+            }
+            return path;
+        }),
+        required: true,
+        help: "A list of paths to map files separated by a ',' used for training (e.g: ./src/survaillant/assets/dungeons/aPotato/info.json)"
+    });
+    parser.add_argument("--representation", {
+        type: "str",
+        choices: Object.values(Representation).map(r => r.toLowerCase()),
+        required: true,
+        help: "Representation of the game's state ()"
+    });
+    parser.add_argument("--policy", {
+        type: "str",
+        choices: Object.values(RewardPolicy).map(r => r.toLowerCase()),
+        required: true,
+        help: "Reward policy to use (Please refer to the 'Reward policies' section of README.md for more information)"
+    });
+    parser.add_argument("--stats", {
+        type: path,
+        required: false,
+        help: "Path to a folder where training statistics will be saved"
     });
 
     return parser.parse_args();
@@ -99,16 +141,42 @@ function parseArguments() {
 /**
  * Script entry point
  */
-function main() {
+async function main() {
 
     // Parse arguments
-    const args = parseArguments();  
+    const args = parseArguments();
+
+    await loadTfBackend(BACKEND.CPU);
+
+    const maps = args.maps.map(path => new Map(JSON.parse(fs.readFileSync(path, "utf8"))));
+
+    const representation = EntitiesRepresentation[args.representation.toUpperCase()];
+
+    const stateGenerator = new FlashlightStateGenerator(4, representation);
+    let rewardPolicy = createPolicy(args.policy.toUpperCase());
+
+    // Create env
+    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator);
 
     // Create agent
-    const agent = new SurvaillantGameAgent(args);
+    const agent = new SurvaillantGameAgent(args, env);
 
     // Launch train
-    agent.train();  
+    await agent.train(async (epoch, metadata, network) => {
+        try {
+            await network.saveTo(name => `.${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
+            //LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
+        } catch (e) {
+            LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
+        }
+    });
+
+    const statsFolder = args.stats;
+    if (statsFolder !== undefined && statsFolder !== null) {
+        const statsFile = join(statsFolder, "DQN.csv");
+        await env.stats.writeTo(statsFile);
+        LOGGER.info(`Training statistics saved in ${statsFile}`);
+    }
 }
 
-main();
+main().catch(LOGGER.exception);

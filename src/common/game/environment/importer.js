@@ -6,6 +6,7 @@
  */
 import { PpoAgent } from "../../../ppo/agent.js";
 import { fromNetwork as loadPpoFinalNetwork } from "../../../ppo/networks.js";
+import { fromNetwork as loadDQNFinalNetwork } from "../../../dqn/network.js";
 import { TrainingInformationKey } from "../training.js";
 import { createPolicy } from "./reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "./state/states.js";
@@ -30,6 +31,8 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
 
         if (agent === PpoAgent.ID) {
             return loadPpoFinalNetwork(modelFile);
+        } else if (agent === "DQN") {
+            return loadDQNFinalNetwork(modelFile);
         }
 
         throw new Error(`Unknown agent: ${agent}`);
