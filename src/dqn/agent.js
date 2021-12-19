@@ -21,7 +21,6 @@ class SurvaillantGameAgent {
     constructor(config, env) {
         this.model = fromZero(config.height, config.width);
         this.modelTarget = fromZero(config.height, config.width);
-
         this.config = config;
 
         this.env = env;
@@ -34,7 +33,6 @@ class SurvaillantGameAgent {
      *
      */
     async train(save) {
-
         let actionHistory = [];
         let stateHistory = [];
         let stateNextHistory = [];
