@@ -43,22 +43,18 @@ class SurvaillantGameAgent {
 
         const stats = new GamesStats();
 
-        let action = -1;
-
+        let action;
         let frameCount = 0;
+
         let epsilonInterval = this.config.epsilonMax - this.config.epsilonMin;
 
-        let old = 100000;
-
-        for (let episodeCount = 0; episodeCount < old; episodeCount++) {
-
+        for (let episodeCount = 0; episodeCount < this.config.epoch ; episodeCount++) {
+            
             this.env.reset();
 
             let state = this.env.state();
 
             let episodeReward = 0;
-
-            let stepCount;
 
             for (let i = 0; i < this.config.maxStepsPerEpisode; i++) {
 
@@ -111,21 +107,27 @@ class SurvaillantGameAgent {
 
                         let futureRewards = this.modelTarget.predict(tf.concat(stateNextSample));
 
-                        // Q value = reward + discount factor * expected future reward
-                        let updatedQValues = rewardsSample.add(tf.max(futureRewards, 1).mul(tf.scalar(this.config.gamma)));
+                        const updatedQValues = tf.tidy(() => {
 
-                        // If final frame set the last value to -1
-                        updatedQValues = updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
-                        // Create a mask so we only calculate loss on the updated Q-values
+                            // Q value = reward + discount factor * expected future reward
+                            let updatedQValues = rewardsSample.add(tf.max(futureRewards, 1).mul(tf.scalar(this.config.gamma)));
+
+                            // If final frame set the last value to -1
+                            return updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
+                            // Create a mask so we only calculate loss on the updated Q-values
+                        });
 
                         let masks = tf.oneHot(actionSample, this.config.actions);
 
-                        // Train the model on the states and updated Q-values
-                        let qValues = this.model.predict(tf.concat(stateSample));
+                        const qAction = tf.tidy(() => {
 
-                        // Apply the masks to the Q-values to get the Q-value for action taken
-                        let qAction = tf.sum(tf.mul(qValues, masks), 1);
-                        // Calculate loss between new Q-value and old Q-value
+                            // Train the model on the states and updated Q-values
+                            let qValues = this.model.predict(tf.concat(stateSample));
+
+                            // Apply the masks to the Q-values to get the Q-value for action taken
+                            return tf.sum(tf.mul(qValues, masks), 1);
+                            // Calculate loss between new Q-value and old Q-value
+                        });
 
                         let hubberLoss = tf.losses.huberLoss(updatedQValues, qAction);
                         return hubberLoss;
@@ -140,19 +142,18 @@ class SurvaillantGameAgent {
                     // update the the target network with new weights
                     this.modelTarget.setWeights(this.model.getWeights());
                     // Log details
-                    LOGGER.info("running reward: " + episodeReward + "  at episode " + episodeCount + ", frame count " + frameCount);
+                    LOGGER.info(`Weights update at frame count : ${frameCount} at epoche ${episodeCount}/${this.config.epoch}`);
                 }
 
                 // Limit the state and reward history
                 if (rewardsHistory.length > this.config.maxMemoryLength) {
+                    LOGGER.warn("Memory size reached. Array will be shifted.");
                     rewardsHistory.shift();
                     stateHistory.shift();
                     stateNextHistory.shift();
                     actionHistory.shift();
                     doneHistory.shift();
                 }
-
-                stepCount = i;
 
                 if (done) {
 
@@ -164,7 +165,12 @@ class SurvaillantGameAgent {
                 }    
             }
 
-            LOGGER.info("Score: " + episodeReward +  "  at epoche " + `${episodeCount}/${old}` + " with " + stepCount + " steps");
+            const statsSummary = stats.summary();
+            //LOGGER.info("Score: " + statsSummary.score +  "  at epoche " + `${episodeCount}/${this.config.epoch}` + " with " + stepCount + " steps");
+            //LOGGER.warn(tf.memory().numTensors);
+            LOGGER.debug(`Rewards: (mean=${statsSummary.rewards.mean}, std=${statsSummary.rewards.std}, min=${statsSummary.rewards.min}, max=${statsSummary.rewards.max}). ` +
+            `Turns: (mean=${statsSummary.turns.mean}, std=${statsSummary.turns.std}, min=${statsSummary.turns.min}, max=${statsSummary.turns.max}).`);
+
 
             // Update running reward to check condition for solving
             episodeRewardHistory.push(episodeReward);
@@ -179,7 +185,7 @@ class SurvaillantGameAgent {
             info[TrainingInformationKey.ENV] = this.env.info();
             info[TrainingInformationKey.ID] = uuidv4();
 
-            await save(episodeCount, info, this.model);
+            await save(this.config.epoch, info, this.modelTarget);
         }
     }
 }

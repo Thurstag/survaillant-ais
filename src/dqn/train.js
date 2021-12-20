@@ -42,6 +42,11 @@ function parseArguments() {
         default: 9,
         help: "Width of the game board."
     });
+    parser.add_argument("--epoch", {
+        type: "int",
+        required: true,
+        help: "Number of epochs to run"
+    });
     parser.add_argument("--actions", {
         type: "float",
         default: 4,
@@ -60,7 +65,7 @@ function parseArguments() {
     parser.add_argument("--maxMemoryLength", {
         type: "int",
         default: 100000,
-        help: "Initial value of epsilon, used for the epsilon-greedy algorithm."
+        help: "Max memory to limit array size."
     });
     parser.add_argument("--updateAfterNbActions", {
         type: "int",
@@ -69,7 +74,7 @@ function parseArguments() {
     });
     parser.add_argument("--updateTargetNetwork", {
         type: "int",
-        default: 100,
+        default: 1000,
         help: "How often to update the target network"
     });
     parser.add_argument("--batchSize", {
@@ -165,7 +170,6 @@ async function main() {
     await agent.train(async (epoch, metadata, network) => {
         try {
             await network.saveTo(name => `.${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
-            //LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
         } catch (e) {
             LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
         }

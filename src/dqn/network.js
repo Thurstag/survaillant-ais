@@ -68,7 +68,7 @@ class DQNTrainingNetwork extends SurvaillantTrainingNetwork {
 
 function modelGenerator(height, width) {
     const model = tf.sequential();
-    model.add(tf.layers.conv2d({
+    model.add(keras.conv2d({
         filters: 128,
         kernelSize: 3,
         strides: 1,
@@ -76,23 +76,23 @@ function modelGenerator(height, width) {
         inputShape: [ height, width, INPUT_LAYERS_COUNT ]
     }));
     model.add(tf.layers.batchNormalization());
-    model.add(tf.layers.conv2d({
+    model.add(keras.conv2d({
         filters: 256,
         kernelSize: 3,
         strides: 1,
         activation: "relu"
     }));
     model.add(tf.layers.batchNormalization());
-    model.add(tf.layers.conv2d({
+    model.add(keras.conv2d({
         filters: 256,
         kernelSize: 3,
         strides: 1,
         activation: "relu"
     }));
     model.add(tf.layers.flatten());
-    model.add(tf.layers.dense({ units: 100, activation: "relu" }));
+    model.add(keras.dense({ units: 100, activation: "relu" }));
     model.add(tf.layers.dropout({ rate: 0.25 }));
-    model.add(tf.layers.dense({ units: SurvaillantTrainingNetwork.ACTIONS_COUNT }));
+    model.add(keras.dense({ units: SurvaillantTrainingNetwork.ACTIONS_COUNT }));
 
     return model;
 }
