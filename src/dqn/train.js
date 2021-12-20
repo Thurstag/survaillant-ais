@@ -7,7 +7,7 @@
 import { ArgumentParser } from "argparse";
 import fs from "fs";
 import { join, sep } from "path";
-import { array, path } from "../common/argparse.js";
+import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
 
 import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environment/environments.js";
 import { FlashlightStateGenerator } from "../common/game/environment/state/states.js";
@@ -16,12 +16,14 @@ import { createPolicy, RewardPolicy } from "../common/game/environment/reward.js
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
 
-import SurvaillantGameAgent from "./agent.js";
+import SurvaillantDQNAgent from "./agent.js";
 import Map from "../survaillant/src/models/games/Map.js";
 
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 
 import LOGGER from "../common/logger.js";
+
+const REFER_STATE_README = "Please refer to the 'State generator' section of README.md for more information";
 
 /**
  * Parse program's arguments
@@ -32,29 +34,35 @@ function parseArguments() {
     const parser = new ArgumentParser({
         description: "Training script for a DQN model that plays Survaillant."
     });
-    parser.add_argument("--height", {
-        type: "int",
-        default: 9,
-        help: "Height of the game board."
+    parser.add_argument("--input_map_width", {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        help: `Maximum map's width that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be width of the widest map of the training maps (${REFER_STATE_README})`
     });
-    parser.add_argument("--width", {
-        type: "int",
-        default: 9,
-        help: "Width of the game board."
+    parser.add_argument("--input_map_height", {
+        default: AUTO_ARGUMENT_VALUE,
+        type: autoOr(int),
+        help: `Maximum map's height that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be height of the tallest map of the training maps (${REFER_STATE_README})`
+    });
+    parser.add_argument("--backend", {
+        default: BACKEND.NONE.toLowerCase(),
+        type: "str",
+        choices: Object.values(BACKEND).map(v => v.toLowerCase()),
+        help: "Backend to use for tensorflow (CPU, GPU, NONE)"
     });
     parser.add_argument("--epoch", {
         type: "int",
         required: true,
         help: "Number of epochs to run"
     });
-    parser.add_argument("--espilonRandomFrames", {
+    parser.add_argument("--epsilonRandomFrames", {
         type: "int",
-        default: 50000,
+        default: 0,
         help: "Number of frames to take random action and observe output."
     });
-    parser.add_argument("--espilonGreedyFrames", {
+    parser.add_argument("--epsilonGreedyFrames", {
         type: "float",
-        default: 1000000.0,
+        default: 0,
         help: "Number of frames for exploration."
     });
     parser.add_argument("--maxMemoryLength", {
@@ -88,8 +96,8 @@ function parseArguments() {
         help: "Max steps per episodes."
     });
     parser.add_argument("--savePath", {
-        type: "str",
-        default: "./models/dqn",
+        type: path,
+        required: true,
         help: "File path to which the online DQN will be saved after training."
     });
     parser.add_argument("--epsilonMin", {
@@ -121,13 +129,13 @@ function parseArguments() {
         type: "str",
         choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
-        help: "Representation of the game's state ()"
+        help: "Representation of the game's state ( " + REFER_STATE_README + ")"
     });
     parser.add_argument("--policy", {
         type: "str",
         choices: Object.values(RewardPolicy).map(r => r.toLowerCase()),
         required: true,
-        help: "Reward policy to use (Please refer to the 'Reward policies' section of README.md for more information)"
+        help: "Reward policy to use ( " + REFER_STATE_README + ")"
     });
     parser.add_argument("--stats", {
         type: path,
@@ -146,7 +154,7 @@ async function main() {
     // Parse arguments
     const args = parseArguments();
 
-    await loadTfBackend(BACKEND.CPU);
+    await loadTfBackend(args.backend.toUpperCase());
 
     const maps = args.maps.map(path => new Map(JSON.parse(fs.readFileSync(path, "utf8"))));
 
@@ -159,12 +167,13 @@ async function main() {
     const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator);
 
     // Create agent
-    const agent = new SurvaillantGameAgent(args, env);
+    const agent = new SurvaillantDQNAgent(args, env);
 
     // Launch train
-    await agent.train(async (epoch, metadata, network) => {
+    const id = await agent.train(async (epoch, metadata, network) => { 
         try {
-            await network.saveTo(name => `.${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
+            await network.saveTo(name => `${args.savePath}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
+            LOGGER.info(`Saved in ${args.savePath} : Max ${epoch}`);
         } catch (e) {
             LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
         }
@@ -172,10 +181,10 @@ async function main() {
 
     const statsFolder = args.stats;
     if (statsFolder !== undefined && statsFolder !== null) {
-        const statsFile = join(statsFolder, "DQN.csv");
+        const statsFile = join(statsFolder, id + ".csv");
         await env.stats.writeTo(statsFile);
         LOGGER.info(`Training statistics saved in ${statsFile}`);
     }
 }
 
-main().catch(LOGGER.exception);
+main().catch(LOGGER.exceptions);

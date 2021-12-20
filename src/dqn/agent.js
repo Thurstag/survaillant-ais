@@ -14,17 +14,22 @@ import { GamesStats } from "../common/game/stats.js";
 
 import { TrainingInformationKey } from "../common/game/training.js";
 import { v4 as uuidv4 } from "uuid";
+
 /**
-  * TODO
+  * Agent to describe DQN implementation
   */
-class SurvaillantGameAgent {
+class SurvaillantDQNAgent {
+
+    static ID = "dqn";
 
     constructor(config, env) {
-        this.model = fromZero(config.height, config.width);
-        this.modelTarget = fromZero(config.height, config.width);
-        this.config = config;
 
+        this.model = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
+        this.modelTarget = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
+        
+        this.config = config;
         this.env = env;
+        this.actions = env.stateShape.z - 1;
 
         this.model.printSummary();
     }
@@ -60,8 +65,8 @@ class SurvaillantGameAgent {
 
                 frameCount += 1;
 
-                if (frameCount < this.config.espilonRanomFrames || this.config.epsilon > Math.random()) {
-                    action = Math.floor(Math.random() * this.config.actions);
+                if (frameCount < this.config.epsilonRandomFrames || this.config.epsilon > Math.random()) {
+                    action = Math.floor(Math.random() * this.actions);
                 } else {
                     let state_tensor = tf.expandDims(state);
                     action = this.model.predict(state_tensor).argMax(-1).dataSync()[0];
@@ -117,7 +122,7 @@ class SurvaillantGameAgent {
                             // Create a mask so we only calculate loss on the updated Q-values
                         });
 
-                        let masks = tf.oneHot(actionSample, this.config.actions);
+                        let masks = tf.oneHot(actionSample, this.actions);
 
                         const qAction = tf.tidy(() => {
 
@@ -134,13 +139,23 @@ class SurvaillantGameAgent {
                     };
 
                     // Backpropagation
-                    this.model.train("dqnPolicy", loss);
+                    this.model.train("dqn", loss);
                 }
 
                 if (frameCount % this.config.updateTargetNetwork == 0) {
 
                     // update the the target network with new weights
                     this.modelTarget.setWeights(this.model.getWeights());
+
+                    const info = {};
+                    info[TrainingInformationKey.AGENT] = "DQN";
+                    info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
+                    info[TrainingInformationKey.ENV] = this.env.info();
+                    info[TrainingInformationKey.ID] = uuidv4();
+
+                    //Save the target
+                    await save(this.config.epoch, info, this.modelTarget);
+
                     // Log details
                     LOGGER.info(`Weights update at frame count : ${frameCount} at epoche ${episodeCount}/${this.config.epoch}`);
                 }
@@ -175,17 +190,11 @@ class SurvaillantGameAgent {
 
             if (episodeRewardHistory.length > 100) {
                 episodeRewardHistory.shift();
-            }
-
-            const info = {};
-            info[TrainingInformationKey.AGENT] = "DQN";
-            info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
-            info[TrainingInformationKey.ENV] = this.env.info();
-            info[TrainingInformationKey.ID] = uuidv4();
-
-            await save(this.config.epoch, info, this.modelTarget);
+            } 
         }
+
+        return `${SurvaillantDQNAgent.ID}_${this.config.epoch}_${this.env.id()}`;
     }
 }
 
-export default SurvaillantGameAgent;
+export default SurvaillantDQNAgent;

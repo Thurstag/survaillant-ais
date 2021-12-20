@@ -6,12 +6,10 @@
  */
 
 import * as tf from "@tensorflow/tfjs";
-import { LAYERS_COUNT as INPUT_LAYERS_COUNT } from "../common/states.js";
 import { SurvaillantTrainingNetwork, SurvaillantFinalNetwork } from "../common/network.js";
 import keras from "../common/tensorflow/keras.js";
 
-
-const POLICY_NETWORK_NAME = "dqnPolicy";
+const POLICY_NETWORK_NAME = "dqn";
 
 class DQNFinalNetwork extends SurvaillantFinalNetwork {
     #network;
@@ -66,14 +64,15 @@ class DQNTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 }
 
-function modelGenerator(height, width) {
+function modelGenerator(x, y, z) {
+
     const model = tf.sequential();
     model.add(keras.conv2d({
         filters: 128,
         kernelSize: 3,
         strides: 1,
         activation: "relu",
-        inputShape: [ height, width, INPUT_LAYERS_COUNT ]
+        inputShape: [ x, y, z ]
     }));
     model.add(tf.layers.batchNormalization());
     model.add(keras.conv2d({
@@ -98,16 +97,16 @@ function modelGenerator(height, width) {
 }
 
 /**
- * Create a training PPO network with existing networks
+ * Create a training DQN network with existing networks
  *
  * @param {int} height
  * @param {int} width
  * @param {number} policyLearningRate Policy network learning rate with Adam optimizer
  * @return {Promise<PpoTrainingNetwork>} Network
  */
-function fromZero(height, width, policyLearningRate = 0.00025) {
+function fromZero(x, y, z, policyLearningRate = 0.00025) {
     return new DQNTrainingNetwork(
-        modelGenerator(height, width),
+        modelGenerator(x, y, z),
         keras.adam(policyLearningRate)
     );
 }
