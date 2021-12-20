@@ -10,11 +10,11 @@ import { join, sep } from "path";
 import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
 
 import { ListMapEnvironment, SingleMapEnvironment } from "../common/game/environment/environments.js";
-import { FlashlightStateGenerator } from "../common/game/environment/state/states.js";
 import { Representation } from "../common/game/environment/state/tensor.js";
 import { createPolicy, RewardPolicy } from "../common/game/environment/reward.js";
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
+import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
 
 import SurvaillantDQNAgent from "./agent.js";
 import Map from "../survaillant/src/models/games/Map.js";
@@ -34,12 +34,12 @@ function parseArguments() {
     const parser = new ArgumentParser({
         description: "Training script for a DQN model that plays Survaillant."
     });
-    parser.add_argument("--input_map_width", {
+    parser.add_argument("--width", {
         default: AUTO_ARGUMENT_VALUE,
         type: autoOr(int),
         help: `Maximum map's width that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be width of the widest map of the training maps (${REFER_STATE_README})`
     });
-    parser.add_argument("--input_map_height", {
+    parser.add_argument("--height", {
         default: AUTO_ARGUMENT_VALUE,
         type: autoOr(int),
         help: `Maximum map's height that the network can take in input. If ${AUTO_ARGUMENT_VALUE} is specified, it will be height of the tallest map of the training maps (${REFER_STATE_README})`
@@ -137,10 +137,22 @@ function parseArguments() {
         required: true,
         help: "Reward policy to use ( " + REFER_STATE_README + ")"
     });
+    parser.add_argument("--state", {
+        type: "str",
+        choices: Object.values(Generator).map(g => g.toLowerCase()),
+        required: true,
+        help: `Mode used to generate game's state (${REFER_STATE_README})`
+    });
     parser.add_argument("--stats", {
         type: path,
         required: false,
         help: "Path to a folder where training statistics will be saved"
+    });
+    parser.add_argument("--radius", {
+        type: "int",
+        default: 0,
+        required: false,
+        help: "Radius for flashlight"
     });
 
     return parser.parse_args();
@@ -160,7 +172,41 @@ async function main() {
 
     const representation = EntitiesRepresentation[args.representation.toUpperCase()];
 
-    const stateGenerator = new FlashlightStateGenerator(4, representation);
+    const stateGenerator = (() => {
+        const mode = args.state.toUpperCase();
+
+        switch (mode) {
+            case Generator.FLASHLIGHT:
+                if(args.radius == 0) {
+                    throw new Error("Radius should be define != 0 when flashlight state is used");
+                }
+                return new FlashlightStateGenerator(args.radius, representation);
+
+            case Generator.NORMAL: {
+                const width = args.width;
+                const height = args.height;
+
+                const autoWidth = width === AUTO_ARGUMENT_VALUE;
+                const autoHeight = height === AUTO_ARGUMENT_VALUE;
+                if (autoWidth || autoHeight) {
+                    const [ maxWidth, maxHeight ] = maps.reduce((a, m) => {
+                        a[0] = Math.max(a[0], m.board.dimX);
+                        a[1] = Math.max(a[1], m.board.dimY);
+
+                        return a;
+                    }, [ 0, 0 ]);
+
+                    return new NormalStateGenerator(autoWidth ? maxWidth : width, autoHeight ? maxHeight : height, representation);
+                } else {
+                    return new NormalStateGenerator(width, height, representation);
+                }
+            }
+
+            default:
+                throw new Error("Unknown state mode: " + mode);
+        }
+    })();
+
     let rewardPolicy = createPolicy(args.policy.toUpperCase());
 
     // Create env
