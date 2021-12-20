@@ -107,22 +107,6 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
 }
 
 /**
- * Create layers representing a feedforward network containing 'units.length' layers
- *
- * @param {number[]} units Unit for each layer
- * @param {Tensor} input Network's input
- * @param {string} intermediateActivation Activation function to use for layers except the last one
- * @return {Tensor} Output layer
- */
-function feedforward(units, input, intermediateActivation) {
-    for (let i = 0; i < units.length - 1; i++) {
-        input = keras.dense({ units: units[i], activation: intermediateActivation }).apply(input);
-    }
-
-    return keras.dense({ units: units[units.length - 1] }).apply(input);
-}
-
-/**
  * Create a training PPO network with random weights
  *
  * @param {number} x Input dimension on first axis
@@ -138,8 +122,8 @@ function random(x, y, z, units = DefaultHyperparameter.HIDDEN_LAYER_UNITS, polic
     const flattenInput = tf.layers.flatten().apply(input);
 
     return new PpoTrainingNetwork(
-        tf.model({ inputs: [ input ], outputs: [ feedforward(units.concat([ SurvaillantTrainingNetwork.ACTIONS_COUNT ]), flattenInput, "tanh") ] }),
-        tf.model({ inputs: [ input ], outputs: [ feedforward(units.concat([ PpoTrainingNetwork.VALUE_OUTPUTS_COUNT ]), flattenInput, "tanh") ] }),
+        tf.model({ inputs: [ input ], outputs: [ keras.feedforward(units.concat([ SurvaillantTrainingNetwork.ACTIONS_COUNT ]), flattenInput, "tanh") ] }),
+        tf.model({ inputs: [ input ], outputs: [ keras.feedforward(units.concat([ PpoTrainingNetwork.VALUE_OUTPUTS_COUNT ]), flattenInput, "tanh") ] }),
         keras.adam(policyLearningRate),
         keras.adam(valueLearningRate)
     );

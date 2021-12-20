@@ -69,6 +69,17 @@ class SurvaillantTrainingNetwork {
     }
 
     /**
+     * Copy weights of networks into the given one
+     *
+     * @param {SurvaillantTrainingNetwork} other Other network
+     */
+    copyWeightsTo(other) {
+        for (const [ name, { network } ] of Object.entries(this.#networks)) {
+            other.network(name).setWeights(network.getWeights());
+        }
+    }
+
+    /**
      * Print summary of networks in standard output
      */
     printSummary() {

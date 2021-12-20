@@ -142,7 +142,7 @@ class GamesStats {
     }
 
     /**
-     * Write statistics per epoch into the given file (format: CSV)$
+     * Write statistics per epoch into the given file (format: CSV)
      *
      * @param stats Games statistics per epoch
      * @param file Path to the file
