@@ -74,9 +74,9 @@ function parseArguments() {
         help: `Limit of the number of turns in a game. If the game isn't finished in ${Argument.TURNS_LIMIT} turns, the game over reason is undefined`
     });
     parser.add_argument(`--${Argument.BACKEND}`, {
-        default: BACKEND.NONE.toLowerCase(),
+        default: BACKEND.CPU.toLowerCase(),
         type: "str",
-        choices: Object.values(BACKEND).map(v => v.toLowerCase()),
+        choices: [ BACKEND.CPU, BACKEND.GPU ].map(v => v.toLowerCase()),
         required: false,
         help: "Tensorflow backend to use"
     });
