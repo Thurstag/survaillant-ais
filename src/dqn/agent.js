@@ -166,11 +166,9 @@ class SurvaillantGameAgent {
             }
 
             const statsSummary = stats.summary();
-            //LOGGER.info("Score: " + statsSummary.score +  "  at epoche " + `${episodeCount}/${this.config.epoch}` + " with " + stepCount + " steps");
-            //LOGGER.warn(tf.memory().numTensors);
+
             LOGGER.debug(`Rewards: (mean=${statsSummary.rewards.mean}, std=${statsSummary.rewards.std}, min=${statsSummary.rewards.min}, max=${statsSummary.rewards.max}). ` +
             `Turns: (mean=${statsSummary.turns.mean}, std=${statsSummary.turns.std}, min=${statsSummary.turns.min}, max=${statsSummary.turns.max}).`);
-
 
             // Update running reward to check condition for solving
             episodeRewardHistory.push(episodeReward);

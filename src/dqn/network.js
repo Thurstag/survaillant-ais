@@ -50,7 +50,7 @@ class DQNTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     network() {
-        return super.network("dqnPolicy");
+        return super.network(POLICY_NETWORK_NAME);
     }
 
     predict(state) {

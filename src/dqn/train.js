@@ -47,11 +47,6 @@ function parseArguments() {
         required: true,
         help: "Number of epochs to run"
     });
-    parser.add_argument("--actions", {
-        type: "float",
-        default: 4,
-        help: "Number of actions to provide"
-    });
     parser.add_argument("--espilonRandomFrames", {
         type: "int",
         default: 50000,
