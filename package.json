@@ -13,14 +13,14 @@
     },
     "dependencies": {
         "@tensorflow/tfjs": "2.8.6",
-        "@tensorflow/tfjs-node": "^2.8.6",
-        "@tensorflow/tfjs-node-gpu": "^2.8.6",
+        "@tensorflow/tfjs-node": "2.8.6",
+        "@tensorflow/tfjs-node-gpu": "2.8.6",
         "@tsdotnet/lazy": "^1.0.22",
         "argparse": "^2.0.1",
         "pathfinding": "^0.4.18",
         "progress": "^2.0.3",
         "timeunit": "^1.1.1",
-        "uuid": "^8.3.2",
+        "uuid": "8.3.2",
         "winston": "^3.3.3"
     },
     "devDependencies": {
