@@ -48,8 +48,8 @@ class DdpgTrainingNetwork extends SurvaillantTrainingNetwork {
      *
      * @param {tf.LayersModel} actor Actor network
      * @param {tf.LayersModel} critic Critic network
-     * @param {tf.Optimizer} actorOpt Actor optimizer
-     * @param {tf.Optimizer} criticOpt Critic optimizer
+     * @param {tf.AdamOptimizer} actorOpt Actor optimizer
+     * @param {tf.AdamOptimizer} criticOpt Critic optimizer
      */
     constructor(actor, critic, actorOpt, criticOpt) {
         const modelByName = {};
@@ -130,6 +130,24 @@ function random(x, y, z, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNIN
 }
 
 /**
+ * Create a training DDPG network with existing networks
+ *
+ * @param {String} actor Path to the file defining the actor network
+ * @param {String} critic Path to the file defining the critic network
+ * @param {number} actorLearningRate Actor network learning rate
+ * @param {number} criticLearningRate Critic network learning rate
+ * @return {Promise<DdpgTrainingNetwork>} Network
+ */
+async function fromNetworks(actor, critic, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNING_RATE, criticLearningRate = DefaultHyperparameter.CRITIC_LEARNING_RATE) {
+    return new DdpgTrainingNetwork(
+        await tf.loadLayersModel(actor),
+        await tf.loadLayersModel(critic),
+        keras.adam(actorLearningRate),
+        keras.adam(criticLearningRate)
+    );
+}
+
+/**
  * Create a final DDPG network based on its actor network
  *
  * @param {String} actor Path to the file defining the actor network
@@ -139,5 +157,5 @@ async function fromNetwork(actor) {
     return new DdpgFinalNetwork(await tf.loadLayersModel(actor));
 }
 
-export { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, random, fromNetwork };
+export { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, random, fromNetwork, fromNetworks };
 

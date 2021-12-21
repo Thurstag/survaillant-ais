@@ -17,7 +17,7 @@ import { SurvaillantTrainingNetwork } from "../common/network.js";
 import Map from "../survaillant/src/models/games/Map.js";
 import { DdpgAgent } from "./agent.js";
 import { DdpgHyperparameter as Hyperparameter } from "./hyperparameters.js";
-import { random } from "./networks.js";
+import { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, fromNetworks, random } from "./networks.js";
 
 const Argument = {
     BACKEND: "backend",
@@ -41,7 +41,7 @@ const Argument = {
  * @param {Object<String, *>} args Arguments
  * @return {Promise<void>} Promise
  */
-async function train(args) { // TODO: Add tests
+async function train(args) {
     // Load maps
     const maps = args[Argument.MAPS].map(path => new Map(JSON.parse(fs.readFileSync(path, "utf8"))));
 
@@ -95,7 +95,9 @@ async function train(args) { // TODO: Add tests
     if (networkImportFolder === undefined || networkImportFolder === null) {
         network = random(stateShape.x, stateShape.y, stateShape.z, actorLearningRate, criticLearningRate);
     } else {
-        // TODO: Implement it
+        network = await fromNetworks(`file://${networkImportFolder}${sep}${ACTOR_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+            `file://${networkImportFolder}${sep}${CRITIC_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+            actorLearningRate, criticLearningRate);
     }
     network.printSummary();
 
