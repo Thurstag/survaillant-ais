@@ -63,7 +63,7 @@ class TrajectoriesBuffer {
     }
 
     /**
-     * Store a game's data
+     * Store game step's data
      *
      * @param {Tensor} observation State of the map
      * @param {Tensor} action Action done

@@ -28,7 +28,7 @@ DOOM_SLAYER_POLICY[Survaillant.ActionConsequence.KILL] = { reward: 5, done: fals
  * Reward policy backed by a map
  */
 class MapRewardPolicy {
-    #_policy;
+    #policy;
     #name;
 
     /**
@@ -38,7 +38,7 @@ class MapRewardPolicy {
      * @param {String} name Policy's name
      */
     constructor(policy, name) {
-        this.#_policy = policy;
+        this.#policy = policy;
         this.#name = name;
     }
 
@@ -58,7 +58,7 @@ class MapRewardPolicy {
      * @return {{reward: number, done: boolean}} Reward and if the game is done or not
      */
     get(consequence) {
-        return this.#_policy[consequence];
+        return this.#policy[consequence];
     }
 
     /**

@@ -1,0 +1,1 @@
+{"agent":"ddpg","epochs":100,"env":{"type":"single","maps":["Private Room"],"policy":"score_based","state":{"type":"normal","parameters":{"dimensions":[10,8]},"representation":"exhaustive"}},"id":"feefac49-4c65-4eed-a775-8a456fac78f2"}

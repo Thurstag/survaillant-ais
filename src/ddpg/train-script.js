@@ -4,17 +4,17 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
-import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
-import fs from "fs";
-import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
-import { RewardPolicy } from "../common/game/environment/reward.js";
-import { Generator } from "../common/game/environment/state/states.js";
-import { Representation } from "../common/game/environment/state/tensor.js";
 import LOGGER from "../common/logger.js";
 import { REFER_POLICIES_MESSAGE, REFER_STATE_MESSAGE } from "../common/readme.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
-import { PpoDefaultHyperparameter as DefaultHyperparameter, PpoHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
+import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
 import { Argument, train } from "./train.js";
+import { array, AUTO_ARGUMENT_VALUE, autoOr, int, path } from "../common/argparse.js";
+import fs from "fs";
+import { RewardPolicy } from "../common/game/environment/reward.js";
+import { Generator } from "../common/game/environment/state/states.js";
+import { Representation } from "../common/game/environment/state/tensor.js";
+import { DdpgDefaultHyperparameter as DefaultHyperparameter, DdpgHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
 
 /**
  * Parse program's arguments
@@ -23,8 +23,8 @@ import { Argument, train } from "./train.js";
  */
 function parseArguments() {
     const parser = new ArgumentParser({
-        description: "Training script for a PPO model that plays Survaillant. This script trains two networks: the value network and the policy network. " +
-            "The policy network is the network that gives the probability to make a decision",
+        description: "Training script for a DDPG model that plays Survaillant. This script trains two networks: the critic network and the actor network. " +
+            "The actor network is the network that gives the probability to make a decision",
         formatter_class: ArgumentDefaultsHelpFormatter
     });
 
@@ -77,12 +77,18 @@ function parseArguments() {
         type: "str",
         choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
-        help: `Representation of the game's state (${REFER_STATE_MESSAGE})`
+        help: "Representation of the game's state (" + REFER_STATE_MESSAGE + ")"
     });
     parser.add_argument(`--${Argument.NETWORK_FOLDER}`, {
         type: path,
         required: true,
-        help: "Path to a folder where value and policy networks will be saved"
+        help: "Path to a folder where actor and critic networks will be saved"
+    });
+    parser.add_argument(`--${Argument.NETWORK_SAVE_FREQUENCY}`, {
+        default: 50,
+        type: "int",
+        required: false,
+        help: `Frequency at which networks are saved. Example: ${Argument.NETWORK_SAVE_FREQUENCY}=25, networks are saved every 25 epochs`
     });
 
     parser.add_argument(`--${Argument.STATS_FOLDER}`, {
@@ -100,16 +106,16 @@ function parseArguments() {
     parser.add_argument(`--${Argument.BASE_NETWORK_FOLDER}`, {
         type: path,
         required: false,
-        help: "Path to a folder containing networks (value.sm and policy.sm) to train"
+        help: "Path to a folder containing networks (actor.sm and critic.sm) to train"
     });
+
     for (const [ name, value ] of Object.entries(DefaultHyperparameter)) {
-        const isArray = Array.isArray(value);
         const isInteger = Number.isInteger(value);
 
         parser.add_argument(`--${name.toLowerCase()}`, {
             dest: name,
-            default: isArray ? value.join(",") : value,
-            type: isArray ? array(Number.parseInt) : (isInteger ? "int" : "float"),
+            default: value,
+            type: isInteger ? "int" : "float",
             required: false,
             help: HyperparameterInfo[name]
         });
@@ -117,7 +123,6 @@ function parseArguments() {
 
     return parser.parse_args();
 }
-
 
 /**
  * Script entry point
@@ -138,3 +143,4 @@ async function main() {
 
 main()
     .catch(LOGGER.exception);
+
