@@ -141,6 +141,16 @@ Please refer to the documentation of the script for more information about its p
 
 You can either train networks created from scratch or existing ones.
 
+## ddpg (Deep Deterministic Policy Gradient)
+
+A module defining a network that plays the game using a Deep Deterministic Policy Gradient model. You can train a network with:
+```
+npm run ddpg:train
+```
+Please refer to the documentation of the script for more information about its parameters (cmd: `npm run ddpg:train -- -h`).
+
+You can either train networks created from scratch or existing ones.
+
 # Requirements
 
 - NodeJS (16.13.0 and above)

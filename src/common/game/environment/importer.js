@@ -4,8 +4,10 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import { DdpgAgent } from "../../../ddpg/agent.js";
 import { PpoAgent } from "../../../ppo/agent.js";
 import { fromNetwork as loadPpoFinalNetwork } from "../../../ppo/networks.js";
+import { fromNetwork as loadDdpgFinalNetwork } from "../../../ddpg/networks.js";
 import { TrainingInformationKey } from "../training.js";
 import { createPolicy } from "./reward.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "./state/states.js";
@@ -30,6 +32,9 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
 
         if (agent === PpoAgent.ID) {
             return loadPpoFinalNetwork(modelFile);
+        }
+        if (agent === DdpgAgent.ID) {
+            return loadDdpgFinalNetwork(modelFile);
         }
 
         throw new Error(`Unknown agent: ${agent}`);
