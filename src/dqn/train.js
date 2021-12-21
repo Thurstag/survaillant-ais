@@ -15,6 +15,7 @@ import { createPolicy, RewardPolicy } from "../common/game/environment/reward.js
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import { EntitiesRepresentation } from "../common/game/environment/state/tensor.js";
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
+import { GamesStats } from "../common/game/stats.js";
 
 import SurvaillantDQNAgent from "./agent.js";
 import Map from "../survaillant/src/models/games/Map.js";
@@ -216,7 +217,7 @@ async function main() {
     const agent = new SurvaillantDQNAgent(args, env);
 
     // Launch train
-    const id = await agent.train(async (epoch, metadata, network) => { 
+    const [ id, statsPerEpoch ] = await agent.train(async (epoch, metadata, network) => { 
         try {
             await network.saveTo(name => `${args.savePath}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
             LOGGER.info(`Saved in ${args.savePath} : Max ${epoch}`);
@@ -228,7 +229,8 @@ async function main() {
     const statsFolder = args.stats;
     if (statsFolder !== undefined && statsFolder !== null) {
         const statsFile = join(statsFolder, id + ".csv");
-        await env.stats.writeTo(statsFile);
+        
+        await GamesStats.writeTo(statsPerEpoch, statsFile);
         LOGGER.info(`Training statistics saved in ${statsFile}`);
     }
 }

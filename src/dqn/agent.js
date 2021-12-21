@@ -193,7 +193,7 @@ class SurvaillantDQNAgent {
             } 
         }
 
-        return `${SurvaillantDQNAgent.ID}_${this.config.epoch}_${this.env.id()}`;
+        return [ `${SurvaillantDQNAgent.ID}_${this.config.epoch}_${this.env.id()}`, stats ];
     }
 }
 
