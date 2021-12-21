@@ -15,9 +15,9 @@ import { GamesStats } from "../common/game/stats.js";
 import LOGGER from "../common/logger.js";
 import { SurvaillantTrainingNetwork } from "../common/network.js";
 import Map from "../survaillant/src/models/games/Map.js";
-import { PpoAgent } from "./agent.js";
-import { PpoHyperparameter as Hyperparameter } from "./hyperparameters.js";
-import { fromNetworks, POLICY_NETWORK_NAME, random, VALUE_NETWORK_NAME } from "./networks.js";
+import { DdpgAgent } from "./agent.js";
+import { DdpgHyperparameter as Hyperparameter } from "./hyperparameters.js";
+import { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, fromNetworks, random } from "./networks.js";
 
 const Argument = {
     BACKEND: "backend",
@@ -25,6 +25,7 @@ const Argument = {
     POLICY: "policy",
     STATS_FOLDER: "statistics_folder",
     NETWORK_FOLDER: "network_folder",
+    NETWORK_SAVE_FREQUENCY: "network_save_frequency",
     EPOCHS: "epochs",
     BASE_NETWORK_FOLDER: "base_network_folder",
     REPRESENTATION: "representation",
@@ -35,7 +36,7 @@ const Argument = {
 };
 
 /**
- * Launch PPO training based on the given arguments (arguments are the script's arguments)
+ * Launch DDPG training based on the given arguments (arguments are the script's arguments)
  *
  * @param {Object<String, *>} args Arguments
  * @return {Promise<void>} Promise
@@ -88,27 +89,32 @@ async function train(args) {
     const stateShape = env.stateShape;
 
     // Create network
-    const networkImportFolder = args[Argument.BASE_NETWORK_FOLDER];
+    const networkImportFolder = args[Argument.BASE_NETWORK_FOLDER], actorLearningRate = args[Hyperparameter.ACTOR_LEARNING_RATE],
+        criticLearningRate = args[Hyperparameter.CRITIC_LEARNING_RATE];
     let network;
     if (networkImportFolder === undefined || networkImportFolder === null) {
-        network = random(stateShape.x, stateShape.y, stateShape.z, args[Hyperparameter.HIDDEN_LAYER_UNITS], args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
+        network = random(stateShape.x, stateShape.y, stateShape.z, actorLearningRate, criticLearningRate);
     } else {
-        network = await fromNetworks(`file://${networkImportFolder}${sep}${POLICY_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
-            `file://${networkImportFolder}${sep}${VALUE_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
-            args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
+        network = await fromNetworks(`file://${networkImportFolder}${sep}${ACTOR_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+            `file://${networkImportFolder}${sep}${CRITIC_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+            actorLearningRate, criticLearningRate);
     }
     network.printSummary();
 
     // Train network
+    const saveFrequency = args[Argument.NETWORK_SAVE_FREQUENCY];
     const networkExportFolder = args[Argument.NETWORK_FOLDER];
-    const agent = new PpoAgent(args[Argument.EPOCHS], args[Hyperparameter.STEPS_PER_EPOCH], args[Hyperparameter.TRAIN_POLICY_ITERATIONS], args[Hyperparameter.TRAIN_VALUE_ITERATIONS],
-        args[Hyperparameter.TARGET_KL], args[Hyperparameter.CLIP_RATIO], args[Hyperparameter.GAMMA], args[Hyperparameter.LAM]);
+    const epochs = args[Argument.EPOCHS];
+    const agent = new DdpgAgent(epochs, args[Hyperparameter.TAU], args[Hyperparameter.GAMMA],
+        args[Hyperparameter.BUFFER_CAPACITY], args[Hyperparameter.TRAIN_BATCH_SIZE], actorLearningRate, criticLearningRate);
     const [ id, statsPerEpoch ] = await agent.train(network, env, async (epoch, metadata, network) => {
-        try {
-            await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
-            LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
-        } catch (e) {
-            LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
+        if (epoch % saveFrequency === 0 || epoch === epochs - 1) {
+            try {
+                await network.saveTo(name => `${networkExportFolder}${sep}${name}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`, metadata, "file");
+                LOGGER.info(`[Epoch ${epoch}] Networks were saved in ${networkExportFolder}`);
+            } catch (e) {
+                LOGGER.error(`Unable to save networks. Cause: ${e.stack}`);
+            }
         }
     });
     LOGGER.info("Training id is: " + id);
@@ -124,3 +130,4 @@ async function train(args) {
 }
 
 export { Argument, train };
+

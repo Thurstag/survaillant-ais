@@ -100,6 +100,11 @@ on the last dimension).
 In the summary mode, monsters and players are on the same level and other elements are on another level. Every entity
 and its states are represented with a unique value.
 
+### Real
+
+In the real mode, monsters and players are on the same level and other elements are on another level. Every entity
+are represented only if they are visible with a unique value. Monster spawns and chest spawns are represented with the same values.
+
 ### Exhaustive
 
 In exhaustive mode, walls are on a level, players are on a level, monsters are on a level,
@@ -133,6 +138,16 @@ A module defining a network that plays the game using a Proximal Policy Optimiza
 npm run ppo:train
 ```
 Please refer to the documentation of the script for more information about its parameters (cmd: `npm run ppo:train -- -h`).
+
+You can either train networks created from scratch or existing ones.
+
+## ddpg (Deep Deterministic Policy Gradient)
+
+A module defining a network that plays the game using a Deep Deterministic Policy Gradient model. You can train a network with:
+```
+npm run ddpg:train
+```
+Please refer to the documentation of the script for more information about its parameters (cmd: `npm run ddpg:train -- -h`).
 
 You can either train networks created from scratch or existing ones.
 

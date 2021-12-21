@@ -7,6 +7,7 @@
         "validate": "node src/validator/validate.js",
         "dqn:train": "node src/dqn/train.js",
         "ppo:train": "node src/ppo/train-script.js",
+        "ddpg:train": "node src/ddpg/train-script.js",
         "test": "mocha test/**/*.js",
         "lint": "cross-env NODE_ENV=production eslint src/**/*.js test/**/*.js",
         "lint:fix": "cross-env NODE_ENV=production eslint --fix src/**/*.js test/**/*.js"

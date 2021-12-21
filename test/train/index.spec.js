@@ -18,10 +18,13 @@ import { Representation } from "../../src/common/game/environment/state/tensor.j
 import { TrainingInformationKey } from "../../src/common/game/training.js";
 import { SurvaillantTrainingNetwork } from "../../src/common/network.js";
 import { BACKEND, load } from "../../src/common/tensorflow/node/backend-loader.js";
+import { DdpgAgent } from "../../src/ddpg/agent.js";
+import { ACTOR_NETWORK_NAME as DDPG_ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME as DDPG_CRITIC_NETWORK_NAME } from "../../src/ddpg/networks.js";
+import { Argument as DdpgArgument, train as trainDdpg } from "../../src/ddpg/train.js";
 import { PpoAgent } from "../../src/ppo/agent.js";
 import { PpoHyperparameter } from "../../src/ppo/hyperparameters.js";
 import { POLICY_NETWORK_NAME as PPO_POLICY_NETWORK_NAME, VALUE_NETWORK_NAME as PPO_VALUE_NETWORK_NAME } from "../../src/ppo/networks.js";
-import { Argument, Argument as PpoArgument, train as trainPpo } from "../../src/ppo/train.js";
+import { Argument as PpoArgument, train as trainPpo } from "../../src/ppo/train.js";
 import Map from "../../src/survaillant/src/models/games/Map.js";
 import chai from "../utils/chai.js";
 
@@ -35,7 +38,8 @@ const STATE_GENERATORS = Object.values(Generator).map(g => g.toLowerCase());
 const TRAINING_TIMEOUT = TimeUnit.minutes.toMillis(5);
 const STEPS_PER_EPOCH = 500;
 const FLASHLIGHT_RADIUS = 3;
-const EPOCHS = 2;
+const PPO_EPOCHS = 2, DDPG_EPOCHS = 42;
+const DDPG_SAVE_FREQUENCY = 10;
 
 async function assertNetworkFiles(folder, agent, epochs, policy, state, stateParams, representation, maps) {
     // Assert exported files
@@ -58,6 +62,26 @@ async function assertNetworkFiles(folder, agent, epochs, policy, state, statePar
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS]).to.deep.equal(stateParams);
     chai.expect(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE][TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION])
         .to.equal(representation);
+}
+
+async function assertTrainingExport(networks, map, isFlashlight, epochs, rewardPolicy, state, representation, agent) {
+    for (const networkName of networks) {
+        let networkPath = path.join(TMP_DIRECTORY, `${networkName}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`);
+
+        const params = {};
+        if (isFlashlight) {
+            params[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS] = FLASHLIGHT_RADIUS;
+        } else {
+            params[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ map.board.dimX, map.board.dimY ];
+        }
+
+        await assertNetworkFiles(networkPath, agent, epochs, rewardPolicy, state, params, representation, [ MAP_PATHS[0] ]);
+
+        const { policy, network, stateGenerator, trainingInfo } = await loadFrom(`file://${networkPath}${path.sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`, path.join(networkPath, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME), fs.readFile);
+        chai.expect(policy.name).to.be.equal(rewardPolicy);
+        chai.expect(network).to.exist;
+        chai.expect(stateGenerator.info()).to.deep.equal(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE]);
+    }
 }
 
 describe("Training integration tests", () => {
@@ -93,12 +117,13 @@ describe("Training integration tests", () => {
                     args[PpoArgument.MAPS] = [ MAP_PATHS[0] ];
                     args[PpoArgument.POLICY] = rewardPolicy;
                     args[PpoArgument.REPRESENTATION] = representation;
-                    args[PpoArgument.EPOCHS] = EPOCHS;
+                    args[PpoArgument.EPOCHS] = PPO_EPOCHS;
                     args[PpoArgument.STATE_MODE] = state;
                     args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+                    args[PpoArgument.STATS_FOLDER] = TMP_DIRECTORY;
                     args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
                     if (isFlashlight) {
-                        args[Argument.FLASHLIGHT_RADIUS] = FLASHLIGHT_RADIUS;
+                        args[PpoArgument.FLASHLIGHT_RADIUS] = FLASHLIGHT_RADIUS;
                     } else {
                         args[PpoArgument.NORMAL_MAP_WIDTH] = AUTO_ARGUMENT_VALUE;
                         args[PpoArgument.NORMAL_MAP_HEIGHT] = AUTO_ARGUMENT_VALUE;
@@ -108,24 +133,38 @@ describe("Training integration tests", () => {
                     await trainPpo(args);
 
                     // Assert exported files
-                    for (const networkName of [ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ]) {
-                        let networkPath = path.join(TMP_DIRECTORY, `${networkName}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`);
+                    await assertTrainingExport([ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ], map, isFlashlight, args[PpoArgument.EPOCHS],
+                        args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], args[PpoArgument.REPRESENTATION], PpoAgent.ID);
+                });
 
-                        const params = {};
-                        if (isFlashlight) {
-                            params[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS] = FLASHLIGHT_RADIUS;
-                        } else {
-                            params[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ map.board.dimX, map.board.dimY ];
-                        }
+                it(`Train DDPG network (policy: ${rewardPolicy}, representation: ${representation}, state: ${state})`, async function () {
+                    this.timeout(TRAINING_TIMEOUT);
 
-                        await assertNetworkFiles(networkPath,
-                            PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], params, args[PpoArgument.REPRESENTATION], [ MAP_PATHS[0] ]);
+                    const isFlashlight = state.toUpperCase() === Generator.FLASHLIGHT;
+                    const map = maps[0];
 
-                        const { policy, network, stateGenerator, trainingInfo } = await loadFrom(`file://${networkPath}${path.sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`, path.join(networkPath, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME), fs.readFile);
-                        chai.expect(policy.name).to.be.equal(rewardPolicy);
-                        chai.expect(network).to.exist;
-                        chai.expect(stateGenerator.info()).to.deep.equal(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE]);
+                    const args = {};
+                    args[DdpgArgument.MAPS] = [ MAP_PATHS[0] ];
+                    args[DdpgArgument.POLICY] = rewardPolicy;
+                    args[DdpgArgument.REPRESENTATION] = representation;
+                    args[DdpgArgument.EPOCHS] = DDPG_EPOCHS;
+                    args[DdpgArgument.STATE_MODE] = state;
+                    args[DdpgArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+                    args[DdpgArgument.STATS_FOLDER] = TMP_DIRECTORY;
+                    args[DdpgArgument.NETWORK_SAVE_FREQUENCY] = DDPG_SAVE_FREQUENCY;
+                    if (isFlashlight) {
+                        args[DdpgArgument.FLASHLIGHT_RADIUS] = FLASHLIGHT_RADIUS;
+                    } else {
+                        args[DdpgArgument.NORMAL_MAP_WIDTH] = AUTO_ARGUMENT_VALUE;
+                        args[DdpgArgument.NORMAL_MAP_HEIGHT] = AUTO_ARGUMENT_VALUE;
                     }
+
+                    // Train network
+                    await trainDdpg(args);
+
+                    // Assert exported files
+                    await assertTrainingExport([ DDPG_ACTOR_NETWORK_NAME, DDPG_CRITIC_NETWORK_NAME ], map, isFlashlight, args[DdpgArgument.EPOCHS],
+                        args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], args[DdpgArgument.REPRESENTATION], DdpgAgent.ID);
                 });
             }
         }
@@ -142,9 +181,10 @@ describe("Training integration tests", () => {
         args[PpoArgument.MAPS] = [ MAP_PATHS[0] ];
         args[PpoArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
         args[PpoArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
-        args[PpoArgument.EPOCHS] = EPOCHS;
+        args[PpoArgument.EPOCHS] = PPO_EPOCHS;
         args[PpoArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
         args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+        args[PpoArgument.STATS_FOLDER] = TMP_DIRECTORY;
         args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
         args[PpoArgument.BASE_NETWORK_FOLDER] = path.join(__dirname, "assets", "ppo");
         args[PpoArgument.NORMAL_MAP_WIDTH] = map.board.dimX;
@@ -160,7 +200,37 @@ describe("Training integration tests", () => {
         }
     });
 
-    it("Train on multiple maps", async function () {
+    it("Train an existing DDPG network", async function () {
+        this.timeout(TRAINING_TIMEOUT);
+
+        const map = maps[0];
+        const stateParams = {};
+        stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ map.board.dimX, map.board.dimY ];
+
+        const args = {};
+        args[DdpgArgument.MAPS] = [ MAP_PATHS[0] ];
+        args[DdpgArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
+        args[DdpgArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
+        args[DdpgArgument.EPOCHS] = DDPG_EPOCHS;
+        args[DdpgArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
+        args[DdpgArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+        args[DdpgArgument.STATS_FOLDER] = TMP_DIRECTORY;
+        args[DdpgArgument.BASE_NETWORK_FOLDER] = path.join(__dirname, "assets", "ddpg");
+        args[DdpgArgument.NORMAL_MAP_WIDTH] = map.board.dimX;
+        args[DdpgArgument.NORMAL_MAP_HEIGHT] = map.board.dimY;
+        args[DdpgArgument.NETWORK_SAVE_FREQUENCY] = DDPG_SAVE_FREQUENCY;
+
+        // Train network
+        await trainDdpg(args);
+
+        // Assert exported files
+        for (const network of [ DDPG_ACTOR_NETWORK_NAME, DDPG_CRITIC_NETWORK_NAME ]) {
+            await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
+                DdpgAgent.ID, args[DdpgArgument.EPOCHS], args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], stateParams, args[DdpgArgument.REPRESENTATION], [ map ]);
+        }
+    });
+
+    it("Train PPO on multiple maps", async function () {
         this.timeout(TRAINING_TIMEOUT);
 
         const stateParams = {};
@@ -175,9 +245,10 @@ describe("Training integration tests", () => {
         args[PpoArgument.MAPS] = MAP_PATHS;
         args[PpoArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
         args[PpoArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
-        args[PpoArgument.EPOCHS] = EPOCHS;
+        args[PpoArgument.EPOCHS] = PPO_EPOCHS;
         args[PpoArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
         args[PpoArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+        args[PpoArgument.STATS_FOLDER] = TMP_DIRECTORY;
         args[PpoHyperparameter.STEPS_PER_EPOCH] = STEPS_PER_EPOCH;
         args[PpoArgument.NORMAL_MAP_WIDTH] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][0];
         args[PpoArgument.NORMAL_MAP_HEIGHT] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][1];
@@ -189,6 +260,39 @@ describe("Training integration tests", () => {
         for (const network of [ PPO_POLICY_NETWORK_NAME, PPO_VALUE_NETWORK_NAME ]) {
             await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
                 PpoAgent.ID, args[PpoArgument.EPOCHS], args[PpoArgument.POLICY], args[PpoArgument.STATE_MODE], stateParams, args[PpoArgument.REPRESENTATION], MAP_PATHS);
+        }
+    });
+
+    it("Train DDPG on multiple maps", async function () {
+        this.timeout(TRAINING_TIMEOUT);
+
+        const stateParams = {};
+        stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = maps.reduce((a, b) => {
+            a[0] = Math.max(b.board.dimX + 1, a[0]);
+            a[1] = Math.max(b.board.dimY + 1, a[1]);
+
+            return a;
+        }, [ 0, 0 ]);
+
+        const args = {};
+        args[DdpgArgument.MAPS] = MAP_PATHS;
+        args[DdpgArgument.POLICY] = RewardPolicy.SCORE_BASED.toLowerCase();
+        args[DdpgArgument.REPRESENTATION] = Representation.EXHAUSTIVE.toLowerCase();
+        args[DdpgArgument.EPOCHS] = DDPG_EPOCHS;
+        args[DdpgArgument.STATE_MODE] = Generator.NORMAL.toLowerCase();
+        args[DdpgArgument.NETWORK_FOLDER] = TMP_DIRECTORY;
+        args[DdpgArgument.STATS_FOLDER] = TMP_DIRECTORY;
+        args[DdpgArgument.NORMAL_MAP_WIDTH] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][0];
+        args[DdpgArgument.NORMAL_MAP_HEIGHT] = stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS][1];
+        args[DdpgArgument.NETWORK_SAVE_FREQUENCY] = DDPG_SAVE_FREQUENCY;
+
+        // Train network
+        await trainDdpg(args);
+
+        // Assert exported files
+        for (const network of [ DDPG_ACTOR_NETWORK_NAME, DDPG_CRITIC_NETWORK_NAME ]) {
+            await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
+                DdpgAgent.ID, args[DdpgArgument.EPOCHS], args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], stateParams, args[DdpgArgument.REPRESENTATION], MAP_PATHS);
         }
     });
 });

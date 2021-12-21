@@ -39,4 +39,20 @@ function conv2d(args) {
     return tf.layers.conv2d({ ...{ strides: [ 1, 1 ], padding: "valid", dilationRate: [ 1, 1 ], kernelInitializer: "glorotUniform", biasInitializer: "zeros" }, ...args });
 }
 
-export default { adam, dense, conv2d };
+/**
+ * Create layers representing a feedforward network containing 'units.length' layers
+ *
+ * @param {number[]} units Unit for each layer
+ * @param {Tensor} input Network's input
+ * @param {string} intermediateActivation Activation function to use for layers except the last one
+ * @return {Tensor} Output layer
+ */
+function feedforward(units, input, intermediateActivation) {
+    for (let i = 0; i < units.length - 1; i++) {
+        input = dense({ units: units[i], activation: intermediateActivation }).apply(input);
+    }
+
+    return dense({ units: units[units.length - 1] }).apply(input);
+}
+
+export default { adam, dense, conv2d, feedforward };
