@@ -49,7 +49,7 @@ class SurvaillantTrainingNetwork {
     /**
      * Get the network with the given name
      *
-     * @param name Network's name
+     * @param {string} name Network's name
      * @return {tf.LayersModel|undefined} Network or undefined if it doesn't exist
      */
     network(name) {
@@ -59,7 +59,7 @@ class SurvaillantTrainingNetwork {
     /**
      * Train with gradients application the given network with loss
      *
-     * @param name Network's name
+     * @param {string} name Network's name
      * @param {function():tf.Scalar} loss Loss function
      */
     train(name, loss) {

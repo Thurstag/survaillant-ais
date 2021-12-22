@@ -22,7 +22,7 @@ const LOGGER = winston.createLogger({
 /**
  * Log the given error
  *
- * @param error Error
+ * @param {Error} error Error
  */
 LOGGER.exception = (error) => {
     LOGGER.error(error.stack);

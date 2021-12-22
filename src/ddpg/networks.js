@@ -62,7 +62,7 @@ class DdpgTrainingNetwork extends SurvaillantTrainingNetwork {
     /**
      * Generate output predictions of actor network for the given batch of inputs
      *
-     * @param inputs Batch of inputs
+     * @param {Tensor} inputs Batch of inputs
      * @return {Tensor} Predictions
      */
     actor(inputs) {

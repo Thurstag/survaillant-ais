@@ -29,8 +29,8 @@ function logProbabilities(logits, action) {
 /**
  * Compute the discounted cumulative sums of x
  *
- * @param x X
- * @param discount Discount
+ * @param {number[]} x X
+ * @param {number} discount Discount
  * @return {number[]} Discounted cumulative sums
  */
 function discountedCumulativeSums(x, discount) {

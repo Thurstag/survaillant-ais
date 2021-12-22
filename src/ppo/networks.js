@@ -60,7 +60,7 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     /**
      * Generate output predictions of policy and value networks for the given batch of inputs
      *
-     * @param inputs Batch of inputs
+     * @param {Tensor} inputs Batch of inputs
      * @return {Tensor[]} Predictions of policy and value networks
      */
     predict(inputs) {
@@ -70,7 +70,7 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     /**
      * Generate output predictions of policy network for the given batch of inputs
      *
-     * @param inputs Batch of inputs
+     * @param {Tensor} inputs Batch of inputs
      * @return {Tensor} Predictions
      */
     actions(inputs) {
@@ -80,7 +80,7 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     /**
      * Generate output predictions of value network for the given batch of inputs
      *
-     * @param inputs Batch of inputs
+     * @param {Tensor} inputs Batch of inputs
      * @return {Tensor} Predictions
      */
     value(inputs) {

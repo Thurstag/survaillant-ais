@@ -72,8 +72,8 @@ class NormalStateGenerator extends StateGenerator {
     /**
      * Constructor
      *
-     * @param x Maximum dimension of the map in the first dimension
-     * @param y Maximum dimension of the map in the second dimension
+     * @param {number} x Maximum dimension of the map in the first dimension
+     * @param {number} y Maximum dimension of the map in the second dimension
      * @param {TensorEntitiesRepresentation} tensorInfo Information about data stored in the tensor
      */
     constructor(x, y, tensorInfo) {

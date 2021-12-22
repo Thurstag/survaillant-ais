@@ -12,7 +12,7 @@ const AUTO_ARGUMENT_VALUE = "auto";
 /**
  * Check that path is a valid path to a filesystem entry
  *
- * @param path Path
+ * @param {string} path Path
  * @return {String} The given path
  */
 function path(path) {

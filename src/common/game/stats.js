@@ -134,7 +134,7 @@ class GamesStats {
     /**
      * Write statistics into the given file (format: CSV)
      *
-     * @param file Path to the file
+     * @param {string} file Path to the file
      * @return {Promise<void>} Promise
      */
     async writeTo(file) {
@@ -144,8 +144,8 @@ class GamesStats {
     /**
      * Write statistics per epoch into the given file (format: CSV)
      *
-     * @param stats Games statistics per epoch
-     * @param file Path to the file
+     * @param {GamesStats[]} stats Games statistics per epoch
+     * @param {string} file Path to the file
      * @return {Promise<void>} Promise
      */
     static async writeTo(stats, file) {
