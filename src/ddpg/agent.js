@@ -105,6 +105,17 @@ class Buffer {
             network.trainActor(() => network.critic(statesBatchTensor, network.actor(statesBatchTensor)).mean().neg());
         });
     }
+
+    /**
+     * Dispose buffer's content
+     */
+    dispose() {
+        for (let i = 0; i < this.#capacity; i++) {
+            this.#states[i]?.dispose();
+            this.#nextStates[i]?.dispose();
+            this.#actions[i]?.dispose();
+        }
+    }
 }
 
 /**
@@ -178,6 +189,7 @@ class DdpgAgent {
 
             await onEpoch(epoch, info, network);
         }
+        buffer.dispose();
 
         return [ `${DdpgAgent.ID}_${this.#epochs}_${env.id()}`, statsPerEpoch ];
     }

@@ -18,6 +18,7 @@ import { SurvaillantTrainingNetwork } from "../common/network.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { POLICY_NETWORK_NAME } from "../ppo/networks.js";
 import Map from "../survaillant/src/models/games/Map.js";
+import tf from "@tensorflow/tfjs";
 
 const Argument = {
     MAPS: "maps",
@@ -117,7 +118,7 @@ async function main() {
             let j;
             for (j = 0; j < turnsLimit; j++) {
                 // Ask network its prediction
-                const action = network.predict(env.state().expandDims()).dataSync()[0];
+                const action = tf.tidy(() => network.predict(env.state().expandDims()).dataSync()[0]);
                 if (env.step(action).done) {
                     break;
                 }
