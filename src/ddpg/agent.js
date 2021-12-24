@@ -13,7 +13,7 @@ import LOGGER from "../common/logger.js";
 import { DdpgDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
 import { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, random } from "./networks.js";
 
-const STATISTICS_FREQUENCY = 40;
+const STATISTICS_FREQUENCY = 40, TURNS_LIMIT = 1234;
 
 /**
  * Buffer storing games history
@@ -211,22 +211,20 @@ class DdpgAgent {
         const stats = new GamesStats();
         env.reset();
 
-        let done = false;
         let lastState = env.state();
-        do {
+        for (let i = 0; i < TURNS_LIMIT; i++) {
             // Play
-            const results = tf.tidy(() => {
+            const { done, action, reward } = tf.tidy(() => {
                 let logits = network.actor(lastState.expandDims());
                 logits = logits.reshape([ logits.shape[logits.shape.length - 1] ]);
 
                 const action = tf.tidy(() => tf.multinomial(logits, 1).dataSync()[0]);
                 return { ...env.step(action), action: logits };
             });
-            done = results.done;
 
             // Update buffer
             const state = env.state();
-            buffer.store(lastState, results.action, results.reward, state);
+            buffer.store(lastState, action, reward, state);
 
             // Backpropagation
             buffer.backpropagation(network, targetNetwork, this.#gamma);
@@ -243,7 +241,10 @@ class DdpgAgent {
             });
 
             lastState = state;
-        } while (!done);
+            if (done) {
+                break;
+            }
+        }
 
         // Add stats
         const gameStats = env.game.stats;
