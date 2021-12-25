@@ -17,7 +17,7 @@ import { EntitiesRepresentation } from "../common/game/environment/state/tensor.
 import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "../common/game/environment/state/states.js";
 import { GamesStats } from "../common/game/stats.js";
 
-import SurvaillantDQNAgent from "./agent.js";
+import { SurvaillantDQNAgent } from "./agent.js";
 import Map from "../survaillant/src/models/games/Map.js";
 
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
@@ -68,7 +68,7 @@ function parseArguments() {
     });
     parser.add_argument("--maxMemoryLength", {
         type: "int",
-        default: 100000,
+        default: 10000,
         help: "Max memory to limit array size."
     });
     parser.add_argument("--updateAfterNbActions", {
@@ -83,7 +83,7 @@ function parseArguments() {
     });
     parser.add_argument("--batchSize", {
         type: "int",
-        default: 32,
+        default: 16,
         help: "Batch size for DQN training."
     });
     parser.add_argument("--gamma", {
@@ -229,7 +229,7 @@ async function main() {
     const statsFolder = args.stats;
     if (statsFolder !== undefined && statsFolder !== null) {
         const statsFile = join(statsFolder, id + ".csv");
-        
+
         await GamesStats.writeTo(statsPerEpoch, statsFile);
         LOGGER.info(`Training statistics saved in ${statsFile}`);
     }

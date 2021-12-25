@@ -59,8 +59,6 @@ class SurvaillantDQNAgent {
 
             let state = this.env.state();
 
-            let episodeReward = 0;
-
             for (let i = 0; i < this.config.maxStepsPerEpisode; i++) {
 
                 frameCount += 1;
@@ -77,8 +75,6 @@ class SurvaillantDQNAgent {
 
                 const { reward, done } = this.env.step(action);
                 let stateNext = this.env.state();
-
-                episodeReward += reward;
 
                 // Save actions and states in replay buffer
                 actionHistory.push(action);
@@ -112,43 +108,47 @@ class SurvaillantDQNAgent {
 
                         let futureRewards = this.modelTarget.predict(tf.concat(stateNextSample));
 
-                        const updatedQValues = tf.tidy(() => {
+                        const hubberLoss = tf.tidy(() => {
 
                             // Q value = reward + discount factor * expected future reward
                             let updatedQValues = rewardsSample.add(tf.max(futureRewards, 1).mul(tf.scalar(this.config.gamma)));
 
                             // If final frame set the last value to -1
-                            return updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
+                            updatedQValues = updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
                             // Create a mask so we only calculate loss on the updated Q-values
-                        });
 
-                        let masks = tf.oneHot(actionSample, this.actions);
 
-                        const qAction = tf.tidy(() => {
+                            let masks = tf.oneHot(actionSample, this.actions);
 
                             // Train the model on the states and updated Q-values
                             let qValues = this.model.predict(tf.concat(stateSample));
 
                             // Apply the masks to the Q-values to get the Q-value for action taken
-                            return tf.sum(tf.mul(qValues, masks), 1);
+                            let qAction = tf.sum(tf.mul(qValues, masks), 1);
                             // Calculate loss between new Q-value and old Q-value
+
+                            return tf.losses.huberLoss(updatedQValues, qAction);
                         });
 
-                        let hubberLoss = tf.losses.huberLoss(updatedQValues, qAction);
+                        
                         return hubberLoss;
                     };
 
                     // Backpropagation
-                    this.model.train("dqn", loss);
+                    tf.tidy(() => {
+                        this.model.train("dqn", loss);
+                    });
                 }
 
                 if (frameCount % this.config.updateTargetNetwork == 0) {
 
                     // update the the target network with new weights
-                    this.modelTarget.setWeights(this.model.getWeights());
+                    tf.tidy(() => {
+                        this.modelTarget.setWeights(this.model.getWeights());
+                    });
 
                     const info = {};
-                    info[TrainingInformationKey.AGENT] = "DQN";
+                    info[TrainingInformationKey.AGENT] = SurvaillantDQNAgent.ID;
                     info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
                     info[TrainingInformationKey.ENV] = this.env.info();
                     info[TrainingInformationKey.ID] = uuidv4();
@@ -162,7 +162,6 @@ class SurvaillantDQNAgent {
 
                 // Limit the state and reward history
                 if (rewardsHistory.length > this.config.maxMemoryLength) {
-                    LOGGER.warn("Memory size reached. Array will be shifted.");
                     rewardsHistory.shift();
                     stateHistory.shift();
                     stateNextHistory.shift();
@@ -184,17 +183,10 @@ class SurvaillantDQNAgent {
 
             LOGGER.debug(`Rewards: (mean=${statsSummary.rewards.mean}, std=${statsSummary.rewards.std}, min=${statsSummary.rewards.min}, max=${statsSummary.rewards.max}). ` +
             `Turns: (mean=${statsSummary.turns.mean}, std=${statsSummary.turns.std}, min=${statsSummary.turns.min}, max=${statsSummary.turns.max}).`);
-
-            // Update running reward to check condition for solving
-            episodeRewardHistory.push(episodeReward);
-
-            if (episodeRewardHistory.length > 100) {
-                episodeRewardHistory.shift();
-            } 
         }
 
-        return [ `${SurvaillantDQNAgent.ID}_${this.config.epoch}_${this.env.id()}`, stats ];
+        return [ `${SurvaillantDQNAgent.ID}_${this.config.epoch}_${this.env.id()}`, [ stats ] ];
     }
 }
 
-export default SurvaillantDQNAgent;
+export { SurvaillantDQNAgent };
