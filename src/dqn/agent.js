@@ -44,7 +44,6 @@ class SurvaillantDQNAgent {
         let stateNextHistory = [];
         let rewardsHistory = [];
         let doneHistory = [];
-        let episodeRewardHistory = [];
 
         const stats = new GamesStats();
 
@@ -129,7 +128,6 @@ class SurvaillantDQNAgent {
 
                             return tf.losses.huberLoss(updatedQValues, qAction);
                         });
-
                         
                         return hubberLoss;
                     };
