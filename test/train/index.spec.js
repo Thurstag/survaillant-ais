@@ -21,6 +21,8 @@ import { BACKEND, load } from "../../src/common/tensorflow/node/backend-loader.j
 import { DdpgAgent } from "../../src/ddpg/agent.js";
 import { ACTOR_NETWORK_NAME as DDPG_ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME as DDPG_CRITIC_NETWORK_NAME } from "../../src/ddpg/networks.js";
 import { Argument as DdpgArgument, train as trainDdpg } from "../../src/ddpg/train.js";
+import { SurvaillantDQNAgent } from "../../src/dqn/agent.js";
+import { train as trainDqn } from "../../src/dqn/train.js";
 import { PpoAgent } from "../../src/ppo/agent.js";
 import { PpoHyperparameter } from "../../src/ppo/hyperparameters.js";
 import { POLICY_NETWORK_NAME as PPO_POLICY_NETWORK_NAME, VALUE_NETWORK_NAME as PPO_VALUE_NETWORK_NAME } from "../../src/ppo/networks.js";
@@ -230,6 +232,33 @@ describe("Training integration tests", () => {
         }
     });
 
+    it("Train an existing DQN network", async function () {
+        this.timeout(TRAINING_TIMEOUT);
+
+        const map = maps[0];
+        const stateParams = {};
+        stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ map.board.dimX, map.board.dimY ];
+
+        const args = {};
+        args["maps"] = [ MAP_PATHS[0] ];
+        args["policy"] = RewardPolicy.SCORE_BASED.toLowerCase();
+        args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
+        args["epoch"] = 2;
+        args["state"] = Generator.FLASHLIGHT.toLowerCase();
+        args["savePath"] = TMP_DIRECTORY;
+        args["stats"] = TMP_DIRECTORY;
+        args["radius"] = 4;
+
+        // Train network
+        await trainDqn(args);
+
+        const network = SurvaillantDQNAgent.ID;
+        
+        // Assert exported files
+        await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
+            SurvaillantDQNAgent.ID, args.epoch, args.policy, args.state, stateParams, args.representation, [ map ]);
+    });
+
     it("Train PPO on multiple maps", async function () {
         this.timeout(TRAINING_TIMEOUT);
 
@@ -294,5 +323,36 @@ describe("Training integration tests", () => {
             await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
                 DdpgAgent.ID, args[DdpgArgument.EPOCHS], args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], stateParams, args[DdpgArgument.REPRESENTATION], MAP_PATHS);
         }
+    });
+
+    it("Train DQN on multiple maps", async function () {
+        this.timeout(TRAINING_TIMEOUT);
+
+        const stateParams = {};
+        stateParams[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = maps.reduce((a, b) => {
+            a[0] = Math.max(b.board.dimX + 1, a[0]);
+            a[1] = Math.max(b.board.dimY + 1, a[1]);
+
+            return a;
+        }, [ 0, 0 ]);
+
+        const args = {};
+        args["maps"] = MAP_PATHS;
+        args["policy"] = RewardPolicy.SCORE_BASED.toLowerCase();
+        args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
+        args["epoch"] = 2;
+        args["state"] = Generator.FLASHLIGHT.toLowerCase();
+        args["savePath"] = TMP_DIRECTORY;
+        args["stats"] = TMP_DIRECTORY;
+        args["radius"] = 4;
+
+        // Train network
+        await trainDqn(args);
+
+        const network = SurvaillantDQNAgent.ID;
+
+        // Assert exported files
+        await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
+            SurvaillantDQNAgent.ID, args.epoch, args.policy, args.state, stateParams, args.representation, [ map ]);
     });
 });
