@@ -170,6 +170,10 @@ async function main() {
     // Load backend from args
     await loadTfBackend(args.backend.toUpperCase());
 
+    await train(args);
+}
+
+async function train(args) {
     // Select maps
     const maps = args.maps.map(path => new Map(JSON.parse(fs.readFileSync(path, "utf8"))));
 
@@ -240,3 +244,5 @@ async function main() {
 }
 
 main().catch(LOGGER.exceptions);
+
+export { train };
