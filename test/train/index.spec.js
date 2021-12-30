@@ -40,7 +40,7 @@ const STATE_GENERATORS = Object.values(Generator).map(g => g.toLowerCase());
 const TRAINING_TIMEOUT = TimeUnit.minutes.toMillis(5);
 const STEPS_PER_EPOCH = 500;
 const FLASHLIGHT_RADIUS = 3;
-const PPO_EPOCHS = 2, DDPG_EPOCHS = 42;
+const PPO_EPOCHS = 2, DDPG_EPOCHS = 42, DQN_EPOCHES = 186;
 const DDPG_SAVE_FREQUENCY = 10;
 
 async function assertNetworkFiles(folder, agent, epochs, policy, state, stateParams, representation, maps) {
@@ -87,6 +87,7 @@ async function assertTrainingExport(networks, map, isFlashlight, epochs, rewardP
 }
 
 describe("Training integration tests", () => {
+
     let maps;
     before(async function () {
         this.timeout(TimeUnit.seconds.toMillis(30));
@@ -168,6 +169,35 @@ describe("Training integration tests", () => {
                     await assertTrainingExport([ DDPG_ACTOR_NETWORK_NAME, DDPG_CRITIC_NETWORK_NAME ], map, isFlashlight, args[DdpgArgument.EPOCHS],
                         args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], args[DdpgArgument.REPRESENTATION], DdpgAgent.ID);
                 });
+
+                it(`Train DQNs network (policy: ${rewardPolicy}, representation: ${representation}, state: ${state})`, async function () {
+                    this.timeout(TRAINING_TIMEOUT);
+
+                    const isFlashlight = state.toUpperCase() === Generator.FLASHLIGHT;
+                    const map = maps[0];
+
+                    const args = {};
+                    args["maps"] = [ MAP_PATHS[0] ];
+                    args["policy"] = RewardPolicy.SCORE_BASED.toLowerCase();
+                    args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
+                    args["epoch"] = DQN_EPOCHES;
+                    args["state"] = Generator.FLASHLIGHT.toLowerCase();
+                    args["savePath"] = TMP_DIRECTORY;
+                    args["stats"] = TMP_DIRECTORY;
+                    if (isFlashlight) {
+                        args["radius"] = FLASHLIGHT_RADIUS;
+                    } else {
+                        args["width"] = AUTO_ARGUMENT_VALUE;
+                        args["height"] = AUTO_ARGUMENT_VALUE;
+                    }
+
+                    // Train network
+                    await trainDqn(args);
+
+                    // Assert exported files
+                    await assertTrainingExport(SurvaillantDQNAgent.ID, map, isFlashlight, args.epoch,
+                        args.policy, args.state, args.representation, SurvaillantDQNAgent.ID);
+                });
             }
         }
     }
@@ -243,11 +273,11 @@ describe("Training integration tests", () => {
         args["maps"] = [ MAP_PATHS[0] ];
         args["policy"] = RewardPolicy.SCORE_BASED.toLowerCase();
         args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
-        args["epoch"] = 2;
+        args["epoch"] = DQN_EPOCHES;
         args["state"] = Generator.FLASHLIGHT.toLowerCase();
         args["savePath"] = TMP_DIRECTORY;
         args["stats"] = TMP_DIRECTORY;
-        args["radius"] = 4;
+        args["radius"] = FLASHLIGHT_RADIUS;
 
         // Train network
         await trainDqn(args);
@@ -340,11 +370,11 @@ describe("Training integration tests", () => {
         args["maps"] = MAP_PATHS;
         args["policy"] = RewardPolicy.SCORE_BASED.toLowerCase();
         args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
-        args["epoch"] = 2;
+        args["epoch"] = DQN_EPOCHES;
         args["state"] = Generator.FLASHLIGHT.toLowerCase();
         args["savePath"] = TMP_DIRECTORY;
         args["stats"] = TMP_DIRECTORY;
-        args["radius"] = 4;
+        args["radius"] = FLASHLIGHT_RADIUS;
 
         // Train network
         await trainDqn(args);
