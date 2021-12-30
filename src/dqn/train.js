@@ -167,12 +167,15 @@ async function main() {
     // Parse arguments
     const args = parseArguments();
 
+    // Load backend from args
     await loadTfBackend(args.backend.toUpperCase());
 
+    // Select maps
     const maps = args.maps.map(path => new Map(JSON.parse(fs.readFileSync(path, "utf8"))));
 
     const representation = EntitiesRepresentation[args.representation.toUpperCase()];
 
+    // Generate the state from args
     const stateGenerator = (() => {
         const mode = args.state.toUpperCase();
 
@@ -208,6 +211,7 @@ async function main() {
         }
     })();
 
+    // Define the reward policy
     let rewardPolicy = createPolicy(args.policy.toUpperCase());
 
     // Create env

@@ -63,7 +63,13 @@ class DQNTrainingNetwork extends SurvaillantTrainingNetwork {
         return this.network().getWeights();
     }
 }
-
+/**
+ * Create model from x, y and z
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} z 
+ * @returns 
+ */
 function modelGenerator(x, y, z) {
 
     const model = tf.sequential();
