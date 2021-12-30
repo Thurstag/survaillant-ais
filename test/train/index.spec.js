@@ -253,7 +253,7 @@ describe("Training integration tests", () => {
         await trainDqn(args);
 
         const network = SurvaillantDQNAgent.ID;
-        
+
         // Assert exported files
         await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
             SurvaillantDQNAgent.ID, args.epoch, args.policy, args.state, stateParams, args.representation, [ map ]);
@@ -353,6 +353,6 @@ describe("Training integration tests", () => {
 
         // Assert exported files
         await assertNetworkFiles(path.join(TMP_DIRECTORY, `${network}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}`),
-            SurvaillantDQNAgent.ID, args.epoch, args.policy, args.state, stateParams, args.representation, [ map ]);
+            SurvaillantDQNAgent.ID, args.epoch, args.policy, args.state, stateParams, args.representation, MAP_PATHS);
     });
 });
