@@ -5,7 +5,7 @@
     "scripts": {
         "example:random": "node dev/survaillant/random-player.js",
         "validate": "node src/validator/validate.js",
-        "dqn:train": "node src/dqn/train.js",
+        "dqn:train": "node src/dqn/train-script.js",
         "ppo:train": "node src/ppo/train-script.js",
         "ddpg:train": "node src/ddpg/train-script.js",
         "test": "mocha test/**/*.js",
