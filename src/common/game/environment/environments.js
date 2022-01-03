@@ -157,11 +157,70 @@ class SingleMapEnvironment extends Environment {
     info() {
         const info = {};
         info[TrainingInformationKey.ENV_KEYS.TYPE] = SingleMapEnvironment.ID;
-        info[TrainingInformationKey.ENV_KEYS.MAPS] = [ this.#map.name ];
+        info[TrainingInformationKey.ENV_KEYS.MAPS] = [this.#map.name];
         info[TrainingInformationKey.ENV_KEYS.POLICY] = this.policy.name;
         info[TrainingInformationKey.ENV_KEYS.STATE] = this.stateGenerator.info();
 
         return info;
+    }
+}
+
+/**
+ * Single map training environment where we can use items
+ */
+class SingleMapEnvironmentWithItems extends SingleMapEnvironment {
+    static ID = "singleWithItems";
+
+    #map;
+
+    /**
+     * Constructor
+     *
+     * @param {Map} map Map used for training
+     * @param {MapRewardPolicy|ScoreDrivenPolicy} policy Reward policy
+     * @param {StateGenerator} stateGenerator State generator
+     */
+    constructor(map, policy, stateGenerator) {
+        super(map, policy, stateGenerator);
+        this.#map = map;
+
+    }
+
+
+    id() {
+        return `${SingleMapEnvironmentWithItems.ID}[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}`;
+    }
+
+    info() {
+        const info = super.info();
+        info[TrainingInformationKey.ENV_KEYS.TYPE] = SingleMapEnvironmentWithItems.ID;
+        return info;
+    }
+
+    /**
+     * Override the state generator to use items
+     *
+     * @param {number} action Action to apply (in [0, 16)) 4 actions for movement and 4 actions for each 3 items
+     * @return {{reward: number, done: boolean}} Action consequence (a reward and if the game is done or not)
+     */
+    step(action) {
+        // Apply action
+        const directionOrItem = Survaillant.PlayerMovesWithItems[action];
+
+        const consequence = directionOrItem[0] === "movement" ?
+            super.game.movePlayer(directionOrItem[1], directionOrItem[2]) :
+            super.game.useItem(directionOrItem[0], directionOrItem[1], directionOrItem[2]);
+
+        // Deduce reward/done
+        const { reward, done } = this.policy instanceof MapRewardPolicy ? this.policy.get(consequence) : this.policy.get(consequence, super.game);
+
+        // Add reward to env/game stats
+        super.game.stats.addReward(reward);
+        if (done) {
+            super.stats.add(super.game.stats);
+        }
+
+        return { reward, done };
     }
 }
 
@@ -187,7 +246,7 @@ class ListMapEnvironment extends Environment {
     }
 
     createGame() {
-        return Survaillant.createGame(this.#maps[tf.randomUniform([ 1 ], 0, this.#maps.length, "int32").dataSync()[0]]);
+        return Survaillant.createGame(this.#maps[tf.randomUniform([1], 0, this.#maps.length, "int32").dataSync()[0]]);
     }
 
     id() {
@@ -205,4 +264,4 @@ class ListMapEnvironment extends Environment {
     }
 }
 
-export { SingleMapEnvironment, ListMapEnvironment };
+export { SingleMapEnvironment, SingleMapEnvironmentWithItems, ListMapEnvironment };

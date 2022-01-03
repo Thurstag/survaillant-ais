@@ -9,7 +9,7 @@ import fs from "fs";
 import { join, sep } from "path";
 import ProgressBar from "progress";
 import { array, path } from "../common/argparse.js";
-import { SingleMapEnvironment } from "../common/game/environment/environments.js";
+import { SingleMapEnvironment, SingleMapEnvironmentWithItems } from "../common/game/environment/environments.js";
 import loadFrom from "../common/game/environment/importer.js";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
@@ -108,7 +108,11 @@ async function main() {
     // Run maps
     const stats = new GamesStats();
     for (const map of maps) {
-        const env = new SingleMapEnvironment(map, policy, stateGenerator);
+        console.log("map");
+        const env = trainingInfo.env.items?.type === "fullList" ?
+            new SingleMapEnvironmentWithItems(map, policy, stateGenerator) :
+            new SingleMapEnvironment(map, policy, stateGenerator);
+
         const progress = new ProgressBar(`Playing '${map.name}' [:bar] :rate/gps :percent :etas`, { total: games, complete: "=", incomplete: " ", width: 20 });
 
         // Pay games

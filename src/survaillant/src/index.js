@@ -111,7 +111,7 @@ class SurvaillantGame {
 
     // TODO: Doc
     useItem(item, dx, dy) {
-        const availableItems = ["", "arrow", "bomb", "dynamite"];
+        const availableItems = ["arrow", "bomb", "dynamite"];
         let player = this.game.players[0];
 
         if (item == undefined || !availableItems.includes(item))
