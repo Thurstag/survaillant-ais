@@ -118,15 +118,17 @@ async function main() {
             let j;
             for (j = 0; j < turnsLimit; j++) {
                 // Ask network its prediction
-                let action;
-                if (trainingInfo.env.state.flattend) {
-                    // Get the sate shape
-                    let dimensionToReduce = (env.state().shape.reduce((accu, current) => accu * current, 1));
-                    action = tf.tidy(() => network.predict(env.state().reshape([ dimensionToReduce ]).expandDims()).dataSync()[0]);
-                }
-                else {
-                    action = tf.tidy(() => network.predict(env.state().expandDims()).dataSync()[0]);
-                }
+
+                const action = tf.tidy(() => {
+                    const state = env.state();
+
+                    if (trainingInfo.env.state.flattend) {
+                        // Get the sate shape
+                        let dimensionToReduce = (state.shape.reduce((accu, current) => accu * current, 1));
+                        return network.predict(state.reshape([ dimensionToReduce ]).expandDims()).dataSync()[0];
+                    }
+                    else return network.predict(state.expandDims()).dataSync()[0];
+                });
 
                 if (env.step(action).done) {
                     break;
