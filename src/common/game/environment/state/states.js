@@ -91,7 +91,7 @@ class NormalStateGenerator extends StateGenerator {
         const info = {};
         info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.TYPE] = NormalStateGenerator.ID;
         const parameters = info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS] = {};
-        parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [ this.#stateDimX, this.#stateDimY ];
+        parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS] = [this.#stateDimX, this.#stateDimY];
         info[TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION] = this.tensorInfo.name;
 
         return info;
@@ -104,7 +104,7 @@ class NormalStateGenerator extends StateGenerator {
     state(game) {
         const gameState = game.getState();
 
-        const state = tf.buffer([ this.#stateDimX, this.#stateDimY, this.tensorInfo.layers ]);
+        const state = tf.buffer([this.#stateDimX, this.#stateDimY, this.tensorInfo.layers]);
 
         // Define ground and walls
         for (let x = 0; x < this.#stateDimX; x++) {
@@ -192,7 +192,7 @@ class FlashlightStateGenerator extends StateGenerator {
         const playerPosition = gameState.players[0].pos;
 
         const stateDim = this.#stateDim;
-        const state = tf.buffer([ stateDim, stateDim, this.tensorInfo.layers ]);
+        const state = tf.buffer([stateDim, stateDim, this.tensorInfo.layers]);
 
         // Define state bounds
         const minX = playerPosition.x - this.#radius;
@@ -248,9 +248,110 @@ class FlashlightStateGenerator extends StateGenerator {
     }
 }
 
+/**
+ * FlashlightStateGenerator with the player number of items and the position and direction of the arrows, bombs and dynamite.
+ * After a specific distance, the player doesn't have information about the map
+ */
+class FlashlightItemsStateGenerator extends FlashlightStateGenerator {
+    static ID = "flashlightWithItems";
+
+    #radius;
+    #stateDim;
+
+    /**
+     * Constructor
+     *
+     * @param {number} radius Radius of the flashlight
+     * @param {TensorEntitiesRepresentation} tensorInfo Information about data stored in the tensor
+     */
+    constructor(radius, tensorInfo) {
+        super(radius, tensorInfo);
+
+        this.#radius = radius;
+        this.#stateDim = this.#radius * 2 + 1;
+    }
+
+    id() {
+        return `${FlashlightItemsStateGenerator.ID}[${this.#radius}, ${this.tensorInfo.name}]`;
+    }
+
+    shape() {
+        return { x: this.#stateDim, y: this.#stateDim, z: this.tensorInfo.layers + 1 }; // Added one layer for the items
+    }
+
+    state(game) {
+        const gameState = game.getState();
+
+        // Get player's position
+        const playerPosition = gameState.players[0].pos;
+
+        const stateDim = this.#stateDim;
+        const state = tf.buffer([stateDim, stateDim, this.tensorInfo.layers + 1]); // Added one layer for the items
+
+        // Define state bounds
+        const minX = playerPosition.x - this.#radius;
+        const maxX = playerPosition.x + this.#radius + 1; // Exclusive bound
+        const minY = playerPosition.y - this.#radius;
+        const maxY = playerPosition.y + this.#radius + 1; // Exclusive bound
+
+        const toLocalX = x => x - minX;
+        const toLocalY = y => y - minY;
+
+        // Define ground and walls
+        for (let x = minX; x < maxX; x++) {
+            for (let y = minY; y < maxY; y++) {
+                const localX = toLocalX(x);
+                const localY = toLocalY(y);
+
+                if (x < 0 || x >= gameState.map.board.dimX || y < 0 || y >= gameState.map.board.dimY || gameState.map.floor[x][y] !== 1) {
+                    state.set(this.tensorInfo.value(WALL), localX, localY, this.tensorInfo.layer(WALL));
+                } else {
+                    for (let i = 0; i < this.tensorInfo.layers + 1; i++) {
+                        state.set(this.tensorInfo.value(NONE), localX, localY, i);
+                    }
+                }
+            }
+        }
+
+        const markVisibleEntity = entity => {
+            const x = entity.pos.x;
+            const y = entity.pos.y;
+
+            // Get value and layer for this entity
+            const value = this.tensorInfo.value(entity);
+            const layer = this.tensorInfo.layer(entity);
+
+            // Check value and layer
+            if (layer === NO_LAYER) {
+                return;
+            }
+            if (value === undefined) {
+                throw new Error(`Unknown value: ${value} at (${x}, ${y}, ${layer})`);
+            }
+
+            // Define entity in tensor
+            if (x >= minX && x < maxX && y >= minY && y < maxY) {
+                state.set(value, toLocalX(x), toLocalY(y), layer);
+            }
+        };
+
+        // Iterate over entities and define them in tensor
+        game.forEach(markVisibleEntity);
+
+        // Add the number of items in the last layer at position 0, 1 and 2
+        const items = gameState.players[0].inventory;
+        state.set(items.arrow, 0, 0, this.tensorInfo.layers);
+        state.set(items.bomb, 1, 0, this.tensorInfo.layers);
+        state.set(items.dynamite, 2, 0, this.tensorInfo.layers);
+
+        return state.toTensor();
+    }
+}
+
 const Generator = {
     FLASHLIGHT: "FLASHLIGHT",
+    FLASHLIGHT_ITEMS: "FLASHLIGHT_ITEMS",
     NORMAL: "NORMAL"
 };
 
-export { FlashlightStateGenerator, NormalStateGenerator, Generator };
+export { FlashlightStateGenerator, FlashlightItemsStateGenerator, NormalStateGenerator, Generator };
