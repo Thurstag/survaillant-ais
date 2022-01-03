@@ -28,10 +28,17 @@ const Survaillant = {
     createGame: (map) => {
         return new SurvaillantGame(map, "solo");
     },
-    PlayerMoves: [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ],
+    PlayerMoves: [[-1, 0], [1, 0], [0, -1], [0, 1]],
+    PlayerMovesWithItems: [
+        ["movement", -1, 0], ["movement", 1, 0], ["movement", 0, -1], ["movement", 0, 1],
+        ["arrow", -1, 0], ["arrow", 1, 0], ["arrow", 0, -1], ["arrow", 0, 1],
+        ["bomb", -1, 0], ["bomb", 1, 0], ["bomb", 0, -1], ["bomb", 0, 1],
+        ["dynamite", -1, 0], ["dynamite", 1, 0], ["dynamite", 0, -1], ["dynamite", 0, 1]
+    ],
     ActionConsequence: {
         MOVED: "MOVED",
         BAD_MOVEMENT: "BAD_MOVEMENT",
+        ITEM_MISSING: "ITEM_MISSING",
         GAME_OVER: "GAME_OVER",
         KILL: "KILL"
     }
@@ -103,20 +110,22 @@ class SurvaillantGame {
     }
 
     // TODO: Doc
-    selectItem(item) {
-        const availableItems = [ "", "arrow", "bomb", "dynamite" ];
-
-        let player = this.game.player[0];
+    useItem(item, dx, dy) {
+        const availableItems = ["", "arrow", "bomb", "dynamite"];
+        let player = this.game.players[0];
 
         if (item == undefined || !availableItems.includes(item))
             throw "A correct Item is required";
 
-        if (player.inventory[item] == 0) // The player has no item
-            return -1;
+        if (player.inventory[item] <= 0) // The player doesn't have the item
+            return Survaillant.ActionConsequence.ITEM_MISSING;
 
         // set item to the player
         player.selectedItem = item;
         player.nextMove = null;
+
+        // Execute the movement
+        return this.movePlayer(dx, dy);
     }
 }
 
