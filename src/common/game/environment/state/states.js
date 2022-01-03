@@ -276,7 +276,7 @@ class FlashlightItemsStateGenerator extends FlashlightStateGenerator {
     }
 
     shape() {
-        return { x: this.#stateDim, y: this.#stateDim, z: this.tensorInfo.layers + 1 }; // Added one layer for the items
+        return { x: this.#stateDim, y: this.#stateDim, z: this.tensorInfo.layers + 1 }; // Added one layer for the item number
     }
 
     state(game) {
@@ -286,7 +286,7 @@ class FlashlightItemsStateGenerator extends FlashlightStateGenerator {
         const playerPosition = gameState.players[0].pos;
 
         const stateDim = this.#stateDim;
-        const state = tf.buffer([stateDim, stateDim, this.tensorInfo.layers + 1]); // Added one layer for the items
+        const state = tf.buffer([ stateDim, stateDim, this.tensorInfo.layers + 1 ]); // Added one layer for the item number
 
         // Define state bounds
         const minX = playerPosition.x - this.#radius;
