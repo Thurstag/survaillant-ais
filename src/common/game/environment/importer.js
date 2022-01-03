@@ -10,7 +10,7 @@ import { fromNetwork as loadPpoFinalNetwork } from "../../../ppo/networks.js";
 import { fromNetwork as loadDdpgFinalNetwork } from "../../../ddpg/networks.js";
 import { TrainingInformationKey } from "../training.js";
 import { createPolicy } from "./reward.js";
-import { FlashlightStateGenerator, Generator, NormalStateGenerator } from "./state/states.js";
+import { FlashlightStateGenerator, FlashlightItemsStateGenerator, Generator, NormalStateGenerator } from "./state/states.js";
 import { EntitiesRepresentation } from "./state/tensor.js";
 
 /**
@@ -55,6 +55,9 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
         switch (mode) {
             case Generator.FLASHLIGHT:
                 return new FlashlightStateGenerator(parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS], representation);
+
+            case Generator.FLASHLIGHTWITHITEMS:
+                return new FlashlightItemsStateGenerator(parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.FLASHLIGHT.RADIUS], representation);
 
             case Generator.NORMAL: {
                 const dimensions = parameters[TrainingInformationKey.ENV_KEYS.STATE_KEYS.PARAMETERS_KEYS.NORMAL.DIMENSIONS];

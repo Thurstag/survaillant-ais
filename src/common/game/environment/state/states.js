@@ -350,7 +350,7 @@ class FlashlightItemsStateGenerator extends FlashlightStateGenerator {
 
 const Generator = {
     FLASHLIGHT: "FLASHLIGHT",
-    FLASHLIGHT_ITEMS: "FLASHLIGHT_ITEMS",
+    FLASHLIGHTWITHITEMS: "FLASHLIGHTWITHITEMS",
     NORMAL: "NORMAL"
 };
 
