@@ -118,7 +118,7 @@ class SurvaillantGame {
             throw "A correct Item is required";
 
         if (player.inventory[item] <= 0) // The player doesn't have the item
-            return Survaillant.ActionConsequence.ITEM_MISSING;
+            return this.#stats.gameOverReason = Survaillant.ActionConsequence.ITEM_MISSING;
 
         // set item to the player
         player.selectedItem = item;

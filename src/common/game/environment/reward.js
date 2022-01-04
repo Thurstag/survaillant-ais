@@ -11,12 +11,14 @@ const MOVED_INFO = { reward: 1, done: false };
 
 const BANDIT_POLICY = {};
 BANDIT_POLICY[Survaillant.ActionConsequence.GAME_OVER] = GAME_OVER_INFO;
+BANDIT_POLICY[Survaillant.ActionConsequence.ITEM_MISSING] = { reward: -1, done: false };
 BANDIT_POLICY[Survaillant.ActionConsequence.BAD_MOVEMENT] = { reward: -1, done: false };
 BANDIT_POLICY[Survaillant.ActionConsequence.MOVED] = MOVED_INFO;
 BANDIT_POLICY[Survaillant.ActionConsequence.KILL] = BANDIT_POLICY[Survaillant.ActionConsequence.MOVED];
 
 const NEUTRAL_POLICY = {};
 NEUTRAL_POLICY[Survaillant.ActionConsequence.GAME_OVER] = GAME_OVER_INFO;
+NEUTRAL_POLICY[Survaillant.ActionConsequence.ITEM_MISSING] = NEUTRAL_POLICY[Survaillant.ActionConsequence.GAME_OVER];
 NEUTRAL_POLICY[Survaillant.ActionConsequence.BAD_MOVEMENT] = NEUTRAL_POLICY[Survaillant.ActionConsequence.GAME_OVER];
 NEUTRAL_POLICY[Survaillant.ActionConsequence.MOVED] = MOVED_INFO;
 NEUTRAL_POLICY[Survaillant.ActionConsequence.KILL] = NEUTRAL_POLICY[Survaillant.ActionConsequence.MOVED];
@@ -103,8 +105,15 @@ RewardPolicies.SCORE_BASED = class ScoreDrivenPolicy {
      */
     get(consequence, game) {
         // Compute reward
-        const res = consequence === Survaillant.ActionConsequence.GAME_OVER || consequence === Survaillant.ActionConsequence.BAD_MOVEMENT ?
-            RewardPolicies.NEUTRAL.get(consequence) : { reward: Math.abs(game.stats.score - this.#score), done: false };
+        const gameEndingConsequences = [
+            Survaillant.ActionConsequence.GAME_OVER,
+            Survaillant.ActionConsequence.BAD_MOVEMENT,
+            Survaillant.ActionConsequence.ITEM_MISSING
+        ];
+
+        const res = gameEndingConsequences.includes(consequence) ?
+            RewardPolicies.NEUTRAL.get(consequence) :
+            { reward: Math.abs(game.stats.score - this.#score), done: false };
 
         // Update last score
         this.#score = game.stats.score;
