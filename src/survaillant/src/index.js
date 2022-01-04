@@ -28,12 +28,12 @@ const Survaillant = {
     createGame: (map) => {
         return new SurvaillantGame(map, "solo");
     },
-    PlayerMoves: [[-1, 0], [1, 0], [0, -1], [0, 1]],
+    PlayerMoves: [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ],
     PlayerMovesWithItems: [
-        ["movement", -1, 0], ["movement", 1, 0], ["movement", 0, -1], ["movement", 0, 1],
-        ["arrow", -1, 0], ["arrow", 1, 0], ["arrow", 0, -1], ["arrow", 0, 1],
-        ["bomb", -1, 0], ["bomb", 1, 0], ["bomb", 0, -1], ["bomb", 0, 1],
-        ["dynamite", -1, 0], ["dynamite", 1, 0], ["dynamite", 0, -1], ["dynamite", 0, 1]
+        [ "movement", -1, 0 ], [ "movement", 1, 0 ], [ "movement", 0, -1 ], [ "movement", 0, 1 ],
+        [ "arrow", -1, 0 ], [ "arrow", 1, 0 ], [ "arrow", 0, -1 ], [ "arrow", 0, 1 ],
+        [ "bomb", -1, 0 ], [ "bomb", 1, 0 ], [ "bomb", 0, -1 ], [ "bomb", 0, 1 ],
+        [ "dynamite", -1, 0 ], [ "dynamite", 1, 0 ], [ "dynamite", 0, -1 ], [ "dynamite", 0, 1 ]
     ],
     ActionConsequence: {
         MOVED: "MOVED",
@@ -111,7 +111,7 @@ class SurvaillantGame {
 
     // TODO: Doc
     useItem(item, dx, dy) {
-        const availableItems = ["arrow", "bomb", "dynamite"];
+        const availableItems = [ "arrow", "bomb", "dynamite" ];
         let player = this.game.players[0];
 
         if (item == undefined || !availableItems.includes(item))

@@ -157,7 +157,7 @@ class SingleMapEnvironment extends Environment {
     info() {
         const info = {};
         info[TrainingInformationKey.ENV_KEYS.TYPE] = SingleMapEnvironment.ID;
-        info[TrainingInformationKey.ENV_KEYS.MAPS] = [this.#map.name];
+        info[TrainingInformationKey.ENV_KEYS.MAPS] = [ this.#map.name ];
         info[TrainingInformationKey.ENV_KEYS.POLICY] = this.policy.name;
         info[TrainingInformationKey.ENV_KEYS.STATE] = this.stateGenerator.info();
 
@@ -246,7 +246,7 @@ class ListMapEnvironment extends Environment {
     }
 
     createGame() {
-        return Survaillant.createGame(this.#maps[tf.randomUniform([1], 0, this.#maps.length, "int32").dataSync()[0]]);
+        return Survaillant.createGame(this.#maps[tf.randomUniform([ 1 ], 0, this.#maps.length, "int32").dataSync()[0]]);
     }
 
     id() {

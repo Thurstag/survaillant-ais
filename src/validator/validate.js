@@ -108,7 +108,6 @@ async function main() {
     // Run maps
     const stats = new GamesStats();
     for (const map of maps) {
-        console.log("map");
         const env = trainingInfo.env.items?.type === "fullList" ?
             new SingleMapEnvironmentWithItems(map, policy, stateGenerator) :
             new SingleMapEnvironment(map, policy, stateGenerator);
