@@ -5,7 +5,10 @@
  * Refer to the LICENSE file included.
  */
 
-import { fromZero } from "./network.js";
+import { fromZero, fromNetworks } from "./network.js";
+import { SurvaillantTrainingNetwork } from "../common/network.js";
+
+import { sep } from "path";
 
 import tf from "@tensorflow/tfjs";
 
@@ -23,6 +26,14 @@ class SurvaillantDQNAgent {
     static ID = "dqn";
 
     constructor(config, env) {
+
+        if (env.baseNetworkFolder === undefined || env.baseNetworkFolder === null) {
+            this.model = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
+            this.modelTarget = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
+        } else {
+            this.model = fromNetworks(`file://${env.baseNetworkFolder}${sep}${SurvaillantDQNAgent.ID}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`);
+            this.modelTarget = fromNetworks(`file://${env.baseNetworkFolder}${sep}${SurvaillantDQNAgent.ID}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`);
+        }
 
         this.model = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
         this.modelTarget = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
@@ -52,8 +63,8 @@ class SurvaillantDQNAgent {
 
         let epsilonInterval = this.config.epsilonMax - this.config.epsilonMin;
 
-        for (let episodeCount = 0; episodeCount < this.config.epoch ; episodeCount++) {
-            
+        for (let episodeCount = 0; episodeCount < this.config.epoch ; episodeCount++) {    
+
             this.env.reset();
 
             let state = this.env.state();
@@ -138,35 +149,6 @@ class SurvaillantDQNAgent {
                     });
                 }
 
-                if (frameCount % this.config.updateTargetNetwork == 0) {
-
-                    // update the the target network with new weights
-                    tf.tidy(() => {
-                        this.modelTarget.setWeights(this.model.getWeights());
-                    });
-
-                    const info = {};
-                    info[TrainingInformationKey.AGENT] = SurvaillantDQNAgent.ID;
-                    info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
-                    info[TrainingInformationKey.ENV] = this.env.info();
-                    info[TrainingInformationKey.ID] = uuidv4();
-
-                    //Save the target
-                    await save(this.config.epoch, info, this.modelTarget);
-
-                    // Log details
-                    LOGGER.info(`Weights update at frame count : ${frameCount} at epoche ${episodeCount}/${this.config.epoch}`);
-                }
-
-                // Limit the state and reward history
-                if (rewardsHistory.length > this.config.maxMemoryLength) {
-                    rewardsHistory.shift();
-                    stateHistory.shift();
-                    stateNextHistory.shift();
-                    actionHistory.shift();
-                    doneHistory.shift();
-                }
-
                 if (done) {
 
                     stats.add(this.env.game.stats);
@@ -175,6 +157,35 @@ class SurvaillantDQNAgent {
 
                     break;
                 }    
+            }
+
+            if ((episodeCount + 1) % this.config.updateTargetNetwork == 0) {
+
+                // update the the target network with new weights
+                tf.tidy(() => {
+                    this.modelTarget.setWeights(this.model.getWeights());
+                });
+
+                const info = {};
+                info[TrainingInformationKey.AGENT] = SurvaillantDQNAgent.ID;
+                info[TrainingInformationKey.EPOCHS] = episodeCount + 1;
+                info[TrainingInformationKey.ENV] = this.env.info();
+                info[TrainingInformationKey.ID] = uuidv4();
+
+                //Save the target
+                await save(this.config.epoch, info, this.modelTarget);
+
+                // Log details
+                LOGGER.info(`Weights update at frame count : ${frameCount} at epoche ${episodeCount + 1}/${this.config.epoch}`);
+            }
+
+            // Limit the state and reward history
+            if (rewardsHistory.length > this.config.maxMemoryLength) {
+                rewardsHistory.shift();
+                stateHistory.shift();
+                stateNextHistory.shift();
+                actionHistory.shift();
+                doneHistory.shift();
             }
 
             const statsSummary = stats.summary();

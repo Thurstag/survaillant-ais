@@ -108,7 +108,7 @@ function modelGenerator(x, y, z) {
  * @param {int} height
  * @param {int} width
  * @param {number} policyLearningRate Policy network learning rate with Adam optimizer
- * @return {Promise<PpoTrainingNetwork>} Network
+ * @return {Promise<DQNFinalNetwork>} Network
  */
 function fromZero(x, y, z, policyLearningRate = 0.00025) {
     return new DQNTrainingNetwork(
@@ -118,13 +118,28 @@ function fromZero(x, y, z, policyLearningRate = 0.00025) {
 }
 
 /**
+ * Create a training DQN network with existing networks
+ *
+ * @param {String} policy Path to the file defining the policy network
+ * @param {number} policyLearningRate Policy network learning rate with Adam optimizer
+ * @param {number} valueLearningRate Value network learning rate with Adam optimizer
+ * @return {Promise<DQNFinalNetwork>} Network
+ */
+async function fromNetworks(policy, policyLearningRate = 0.00025) {
+    return new DQNFinalNetwork(
+        await tf.loadLayersModel(policy),
+        keras.adam(policyLearningRate),
+    );
+}
+
+/**
  * Create a final DQN network based on its policy network
  *
  * @param {String} policy Path to the file defining the policy network
- * @return {Promise<PpoFinalNetwork>} Network
+ * @return {Promise<DQNFinalNetwork>} Network
  */
 async function fromNetwork(policy) {
     return new DQNFinalNetwork(await tf.loadLayersModel(policy));
 }
 
-export { fromZero, fromNetwork };
+export { fromZero, fromNetwork, fromNetworks };

@@ -70,7 +70,7 @@ function parseArguments() {
     });
     parser.add_argument("--updateTargetNetwork", {
         type: "int",
-        default: 1000,
+        default: 200,
         help: "How often to update the target network"
     });
     parser.add_argument("--batchSize", {
@@ -146,6 +146,11 @@ function parseArguments() {
         default: 0,
         required: false,
         help: "Radius for flashlight"
+    });
+    parser.add_argument("--baseNetworkFolder", {
+        type: path,
+        required: false,
+        help: "Path to a folder containing networks (actor.sm and critic.sm) to train"
     });
 
     return parser.parse_args();

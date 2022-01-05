@@ -1,0 +1,1 @@
+{"agent":"dqn","epochs":9980,"env":{"type":"single","maps":["A potato"],"policy":"neutral","state":{"type":"normal","parameters":{"dimensions":[11,7]},"representation":"exhaustive"}},"id":"2f735826-108c-4e19-84fc-0146251c4c2d"}
