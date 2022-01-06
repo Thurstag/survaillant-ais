@@ -175,7 +175,7 @@ class SingleMapEnvironment extends Environment {
     }
 
     id() {
-        return `${SingleMapEnvironment.ID}[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}`;
+        return `${SingleMapEnvironment.ID}[${this.#map.name}]_${this.policy.name}_${this.stateGenerator.id()}${this.items ? "_with_items" : ""}`;
     }
 
     info() {
@@ -217,7 +217,7 @@ class ListMapEnvironment extends Environment {
     }
 
     id() {
-        return `${ListMapEnvironment.ID}[${this.#maps.map(m => m.name).join(", ")}]_${this.policy.name}_${this.stateGenerator.id()}`;
+        return `${ListMapEnvironment.ID}[${this.#maps.map(m => m.name).join(", ")}]_${this.policy.name}_${this.stateGenerator.id()}${this.items ? "_with_items" : ""}`;
     }
 
     info() {
