@@ -1,0 +1,1 @@
+{"agent":"ppo","epochs":5,"env":{"type":"single","maps":["Private Room"],"policy":"score_based","state":{"type":"normal","parameters":{"dimensions":[10,8]},"representation":"exhaustive"},"items":true},"id":"74c3f065-b509-4a55-864d-23098b2d51bf"}
