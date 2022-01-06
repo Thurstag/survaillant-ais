@@ -40,7 +40,7 @@ const STATE_GENERATORS = Object.values(Generator).map(g => g.toLowerCase());
 const TRAINING_TIMEOUT = TimeUnit.minutes.toMillis(5);
 const STEPS_PER_EPOCH = 500;
 const FLASHLIGHT_RADIUS = 3;
-const PPO_EPOCHS = 2, DDPG_EPOCHS = 2, DQN_EPOCHES = 20;
+const PPO_EPOCHS = 2, DDPG_EPOCHS = 42, DQN_EPOCHES = 20;
 const DDPG_SAVE_FREQUENCY = 10;
 
 async function assertNetworkFiles(folder, agent, epochs, policy, state, stateParams, representation, maps) {
