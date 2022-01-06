@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from "uuid";
 import { GamesStats } from "../common/game/stats.js";
 import { TrainingInformationKey } from "../common/game/training.js";
 import LOGGER from "../common/logger.js";
-import { SurvaillantTrainingNetwork } from "../common/network.js";
 import scipy from "../common/scipy/index.js";
 import { OperationsRecorder } from "../common/time.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
@@ -20,10 +19,11 @@ import { PpoDefaultHyperparameter as DefaultHyperparameter } from "./hyperparame
  *
  * @param {Tensor} logits Policy output prediction
  * @param {Tensor} action Action to take
+ * @param {number} actions Actions count
  * @return {Tensor} Log-probabilities
  */
-function logProbabilities(logits, action) {
-    return tf.sum(tf.oneHot(action, SurvaillantTrainingNetwork.ACTIONS_COUNT).mul(tf.softmax(logits)), 1);
+function logProbabilities(logits, action, actions) {
+    return tf.sum(tf.oneHot(action, actions).mul(tf.softmax(logits)), 1);
 }
 
 /**
@@ -65,7 +65,7 @@ class TrajectoriesBuffer {
     /**
      * Store game step's data
      *
-     * @param {Tensor} observation State of the map
+     * @param {Tensor[]} observation State of the game
      * @param {Tensor} action Action done
      * @param {number} reward Reward obtained
      * @param {number} value Value network's output
@@ -107,7 +107,7 @@ class TrajectoriesBuffer {
     /**
      * Get data as tensors
      *
-     * @return {Tensor[]} Observations, actions, advantages, returns, log probabilities
+     * @return {[Tensor[], Tensor, Tensor, Tensor, Tensor]} Observations, actions, advantages, returns, log probabilities
      */
     tensors() {
         // Normalize advantages tensor
@@ -117,7 +117,7 @@ class TrajectoriesBuffer {
 
 
         return [
-            tf.concat(this.observationBuffer),
+            this.observationBuffer[0].map((_, i) => tf.concat(this.observationBuffer.map(t => t[i]))),
             tf.concat(this.actionBuffer),
             advantageAsTensor.sub(advantageMean).div(advantageStd),
             tf.concat(this.returnBuffer.map(r => tf.tensor2d([ [ r ] ]))),
@@ -184,7 +184,7 @@ class PpoAgent {
                 stats.push(this.#play(network, buffer, env, epoch));
 
                 // Train network
-                this.#trainOnBuffer(network, buffer, epoch);
+                this.#trainOnBuffer(network, buffer, env, epoch);
             });
 
             const info = {};
@@ -221,16 +221,16 @@ class PpoAgent {
             opsRecorder.start();
 
             // Get the logits, valueT
-            const observation = env.state().expandDims();
+            const observation = env.state().map(t => t.expandDims());
             const [ logits, valueT ] = network.predict(observation).map(t => t.reshape([ t.shape[t.shape.length - 1] ]));
             const action = tf.multinomial(logits, 1);
 
             // Take one step in the environment
             const { reward, done } = env.step(action.dataSync());
-            const newObservation = env.state().expandDims();
+            const newObservation = env.state().map(t => t.expandDims());
 
             // Get the log-probability of the action
-            const logProbabilityT = logProbabilities(logits, action);
+            const logProbabilityT = logProbabilities(logits, action, env.actionsCount);
 
             // Store obs, act, rew, v_t, logp_pi_t
             buffer.store(observation, action, reward, valueT.dataSync()[0], logProbabilityT);
@@ -263,9 +263,10 @@ class PpoAgent {
      *
      * @param {PpoTrainingNetwork} network Network to train
      * @param {TrajectoriesBuffer} buffer Buffer containing games' data
+     * @param {Environment} env Training environment
      * @param {number} epoch Current epoch
      */
-    #trainOnBuffer(network, buffer, epoch) {
+    #trainOnBuffer(network, buffer, env, epoch) {
         const opsRecorder = new OperationsRecorder();
         const funcStart = process.hrtime.bigint();
 
@@ -287,12 +288,12 @@ class PpoAgent {
 
             const kl = tf.tidy(() => {
                 network.trainPolicy(() => {
-                    const ratio = logProbabilities(network.actions(observations), actions).sub(logprobabilities).exp();
+                    const ratio = logProbabilities(network.actions(observations), actions, env.actionsCount).sub(logprobabilities).exp();
 
                     return minAdvantage.minimum(ratio.mul(advantages)).mean().neg();
                 });
 
-                return logprobabilities.sub(logProbabilities(network.actions(observations), actions)).mean().dataSync()[0];
+                return logprobabilities.sub(logProbabilities(network.actions(observations), actions, env.actionsCount)).mean().dataSync()[0];
             });
 
             opsRecorder.end();

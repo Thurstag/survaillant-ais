@@ -29,6 +29,7 @@ const Argument = {
     BASE_NETWORK_FOLDER: "base_network_folder",
     REPRESENTATION: "representation",
     STATE_MODE: "state_mode",
+    ITEMS: "items",
     FLASHLIGHT_RADIUS: "flashlight_radius",
     NORMAL_MAP_WIDTH: "input_map_width",
     NORMAL_MAP_HEIGHT: "input_map_height"
@@ -84,14 +85,14 @@ async function train(args) {
     })();
 
     // Create environment
-    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator);
-    const stateShape = env.stateShape;
+    const items = args[Argument.ITEMS];
+    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator, items) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator, items);
 
     // Create network
     const networkImportFolder = args[Argument.BASE_NETWORK_FOLDER];
     let network;
     if (networkImportFolder === undefined || networkImportFolder === null) {
-        network = random(stateShape.x, stateShape.y, stateShape.z, args[Hyperparameter.HIDDEN_LAYER_UNITS], args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
+        network = random(env.shapes, env.actionsCount, args[Hyperparameter.HIDDEN_LAYER_UNITS], args[Hyperparameter.POLICY_LEARNING_RATE], args[Hyperparameter.VALUE_LEARNING_RATE]);
     } else {
         network = await fromNetworks(`file://${networkImportFolder}${sep}${POLICY_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
             `file://${networkImportFolder}${sep}${VALUE_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,

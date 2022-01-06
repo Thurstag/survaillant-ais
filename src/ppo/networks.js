@@ -58,9 +58,9 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     /**
-     * Generate output predictions of policy and value networks for the given batch of inputs
+     * Generate output predictions of policy and value networks for the given inputs
      *
-     * @param {Tensor} inputs Batch of inputs
+     * @param {Tensor[]} inputs Batch of tensors for each input
      * @return {Tensor[]} Predictions of policy and value networks
      */
     predict(inputs) {
@@ -68,9 +68,9 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     /**
-     * Generate output predictions of policy network for the given batch of inputs
+     * Generate output predictions of policy network for the given inputs
      *
-     * @param {Tensor} inputs Batch of inputs
+     * @param {Tensor[]} inputs Batch of tensors for each input
      * @return {Tensor} Predictions
      */
     actions(inputs) {
@@ -78,9 +78,9 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     /**
-     * Generate output predictions of value network for the given batch of inputs
+     * Generate output predictions of value network for the given inputs
      *
-     * @param {Tensor} inputs Batch of inputs
+     * @param {Tensor[]} inputs Batch of tensors for each input
      * @return {Tensor} Predictions
      */
     value(inputs) {
@@ -109,21 +109,22 @@ class PpoTrainingNetwork extends SurvaillantTrainingNetwork {
 /**
  * Create a training PPO network with random weights
  *
- * @param {number} x Input dimension on first axis
- * @param {number} y Input dimension on second axis
- * @param {number} z Input dimension on third axis
+ * @param {number[][]} shapeByInput Dimension for each axis by input
+ * @param {number} actions Actions count
  * @param {number[]} units Units of hidden layers
  * @param {number} policyLearningRate Policy network learning rate with Adam optimizer
  * @param {number} valueLearningRate Value network learning rate with Adam optimizer
  * @return {PpoTrainingNetwork} Network
  */
-function random(x, y, z, units = DefaultHyperparameter.HIDDEN_LAYER_UNITS, policyLearningRate = DefaultHyperparameter.POLICY_LEARNING_RATE, valueLearningRate = DefaultHyperparameter.VALUE_LEARNING_RATE) {
-    const input = tf.input({ shape: [ x, y, z ] });
-    const flattenInput = tf.layers.flatten().apply(input);
+function random(shapeByInput, actions, units = DefaultHyperparameter.HIDDEN_LAYER_UNITS, policyLearningRate = DefaultHyperparameter.POLICY_LEARNING_RATE, valueLearningRate = DefaultHyperparameter.VALUE_LEARNING_RATE) {
+    const flatten = t => t.shape.length > 2 ? tf.layers.flatten().apply(t) : t;
+
+    const inputs = shapeByInput.map(shape => tf.input({ shape: shape }));
+    const flattenInputs = inputs.length > 1 ? tf.layers.concatenate().apply(inputs.map(flatten)) : inputs.map(flatten);
 
     return new PpoTrainingNetwork(
-        tf.model({ inputs: [ input ], outputs: [ keras.feedforward(units.concat([ SurvaillantTrainingNetwork.ACTIONS_COUNT ]), flattenInput, "tanh") ] }),
-        tf.model({ inputs: [ input ], outputs: [ keras.feedforward(units.concat([ PpoTrainingNetwork.VALUE_OUTPUTS_COUNT ]), flattenInput, "tanh") ] }),
+        tf.model({ inputs: inputs, outputs: [ keras.feedforward(units.concat([ actions ]), flattenInputs, "tanh") ] }),
+        tf.model({ inputs: inputs, outputs: [ keras.feedforward(units.concat([ PpoTrainingNetwork.VALUE_OUTPUTS_COUNT ]), flattenInputs, "tanh") ] }),
         keras.adam(policyLearningRate),
         keras.adam(valueLearningRate)
     );
