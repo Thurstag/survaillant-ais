@@ -171,47 +171,47 @@ describe("Training integration tests", () => {
                     await assertTrainingExport([ DDPG_ACTOR_NETWORK_NAME, DDPG_CRITIC_NETWORK_NAME ], map, isFlashlight, args[DdpgArgument.EPOCHS],
                         args[DdpgArgument.POLICY], args[DdpgArgument.STATE_MODE], args[DdpgArgument.REPRESENTATION], DdpgAgent.ID);
                 });
-            }
-            it(`Train DQNs network (policy: ${rewardPolicy}, representation: exhaustive, state: ${state})`, async function () {
+                it(`Train DQNs network (policy: ${rewardPolicy}, representation: ${representation}, state: ${state})`, async function () {
                    
-                this.timeout(TRAINING_TIMEOUT);
-
-                const isFlashlight = state.toUpperCase() === Generator.FLASHLIGHT;
-                const map = maps[0];
-
-                const args = {};
-                args["maps"] = [ MAP_PATHS[0] ];
-                args["policy"] = rewardPolicy;
-                args["representation"] = Representation.EXHAUSTIVE.toLowerCase();
-                args["epoch"] = DQN_EPOCHES;
-                args["state"] = state;
-                args["savePath"] = TMP_DIRECTORY;
-                args["stats"] = TMP_DIRECTORY;
-                args["updateTargetNetwork"] = 20;
-                args["epsilonRandomFrames"] = 0;
-                args["epsilonGreedyFrames"] = 0;
-                args["maxMemoryLength"] = 50;
-                args["updateAfterNbActions"] = 4;
-                args["batchSize"] = 16;
-                args["gamma"] = 0.99;
-                args["maxStepsPerEpisode"] = 10000;
-                args["epsilonMin"] = 0.1;
-                args["epsilonMax"] = 1;
-                args["epsilon"] = 0.2;
-                if (isFlashlight) {
-                    args["radius"] = FLASHLIGHT_RADIUS;
-                } else {
-                    args["width"] = AUTO_ARGUMENT_VALUE;
-                    args["height"] = AUTO_ARGUMENT_VALUE;
-                }
-
-                // Train network
-                await trainDqn(args);
-
-                // Assert exported files
-                await assertTrainingExport([ SurvaillantDQNAgent.ID ], map, isFlashlight, args.epoch,
-                    args.policy, args.state, args.representation, SurvaillantDQNAgent.ID);
-            });
+                    this.timeout(TRAINING_TIMEOUT);
+    
+                    const isFlashlight = state.toUpperCase() === Generator.FLASHLIGHT;
+                    const map = maps[0];
+    
+                    const args = {};
+                    args["maps"] = [ MAP_PATHS[0] ];
+                    args["policy"] = rewardPolicy;
+                    args["representation"] = representation;
+                    args["epoch"] = DQN_EPOCHES;
+                    args["state"] = state;
+                    args["savePath"] = TMP_DIRECTORY;
+                    args["stats"] = TMP_DIRECTORY;
+                    args["updateTargetNetwork"] = 20;
+                    args["epsilonRandomFrames"] = 0;
+                    args["epsilonGreedyFrames"] = 0;
+                    args["maxMemoryLength"] = 50;
+                    args["updateAfterNbActions"] = 4;
+                    args["batchSize"] = 16;
+                    args["gamma"] = 0.99;
+                    args["maxStepsPerEpisode"] = 10000;
+                    args["epsilonMin"] = 0.1;
+                    args["epsilonMax"] = 1;
+                    args["epsilon"] = 0.2;
+                    if (isFlashlight) {
+                        args["radius"] = FLASHLIGHT_RADIUS;
+                    } else {
+                        args["width"] = AUTO_ARGUMENT_VALUE;
+                        args["height"] = AUTO_ARGUMENT_VALUE;
+                    }
+    
+                    // Train network
+                    await trainDqn(args);
+    
+                    // Assert exported files
+                    await assertTrainingExport([ SurvaillantDQNAgent.ID ], map, isFlashlight, args.epoch,
+                        args.policy, args.state, args.representation, SurvaillantDQNAgent.ID);
+                });
+            }
         }
     }
 

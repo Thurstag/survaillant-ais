@@ -40,7 +40,7 @@ class SurvaillantDQNAgent {
         
         this.config = config;
         this.env = env;
-        this.actions = env.stateShape.z - 1;
+        this.actions = 4;
 
         this.model.printSummary();
     }
@@ -126,7 +126,6 @@ class SurvaillantDQNAgent {
                             // If final frame set the last value to -1
                             updatedQValues = updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
                             // Create a mask so we only calculate loss on the updated Q-values
-
 
                             let masks = tf.oneHot(actionSample, this.actions);
 
