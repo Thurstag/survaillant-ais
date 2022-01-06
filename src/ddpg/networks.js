@@ -60,9 +60,9 @@ class DdpgTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     /**
-     * Generate output predictions of actor network for the given batch of inputs
+     * Generate output predictions of actor network for the given inputs
      *
-     * @param {Tensor} inputs Batch of inputs
+     * @param {Tensor[]} inputs Batch of tensors for each input
      * @return {Tensor} Predictions
      */
     actor(inputs) {
@@ -79,14 +79,14 @@ class DdpgTrainingNetwork extends SurvaillantTrainingNetwork {
     }
 
     /**
-     * Generate output predictions of critic network for the given batch of maps and actions
+     * Generate output predictions of critic network for the given batch of games and actions
      *
-     * @param {Tensor} mapInputs Batch of maps
+     * @param {Tensor[]} gameInputs Batches of game input
      * @param {Tensor} actionInputs Batch of actions
      * @return {Tensor} Predictions
      */
-    critic(mapInputs, actionInputs) {
-        return this.network(CRITIC_NETWORK_NAME).predict([ mapInputs, actionInputs ]);
+    critic(gameInputs, actionInputs) {
+        return this.network(CRITIC_NETWORK_NAME).predict([ ...gameInputs, actionInputs ]);
     }
 
     /**
@@ -102,28 +102,29 @@ class DdpgTrainingNetwork extends SurvaillantTrainingNetwork {
 /**
  * Create a training DDPG network with random weights
  *
- * @param {number} x Input dimension on first axis
- * @param {number} y Input dimension on second axis
- * @param {number} z Input dimension on third axis
+ * @param {number[][]} shapeByInput Dimension for each axis by input
+ * @param {number} actions Actions count
  * @param {number} actorLearningRate Actor network learning rate with Adam optimizer
  * @param {number} criticLearningRate Critic network learning rate with Adam optimizer
  * @return {DdpgTrainingNetwork} Network
  */
-function random(x, y, z, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNING_RATE, criticLearningRate = DefaultHyperparameter.CRITIC_LEARNING_RATE) {
-    const mapInput = tf.input({ shape: [ x, y, z ] });
-    const flattenMapInput = tf.layers.flatten().apply(mapInput);
-    const actionsInput = tf.input({ shape: [ SurvaillantTrainingNetwork.ACTIONS_COUNT ] });
+function random(shapeByInput, actions, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNING_RATE, criticLearningRate = DefaultHyperparameter.CRITIC_LEARNING_RATE) {
+    const flatten = t => t.shape.length > 2 ? tf.layers.flatten().apply(t) : t;
 
-    const actor = keras.feedforward([ 64, 64 ].concat([ SurvaillantTrainingNetwork.ACTIONS_COUNT ]), flattenMapInput, "tanh");
+    const gameInputs = shapeByInput.map(shape => tf.input({ shape: shape }));
+    const flattenGameInputs = gameInputs.length > 1 ? tf.layers.concatenate().apply(gameInputs.map(flatten)) : gameInputs.map(flatten);
+    const actionsInput = tf.input({ shape: [ actions ] });
+
+    const actor = keras.feedforward([ 64, 64 ].concat([ actions ]), flattenGameInputs, "tanh");
     const critic = keras.feedforward([ 256, 256 ].concat([ DdpgTrainingNetwork.CRITIC_OUTPUTS_COUNT ]), tf.layers.concatenate({ axis: -1 })
         .apply([
-            keras.feedforward([ 16, 32 ], flattenMapInput, CRITIC_ACTIVATION_FUNC),
+            keras.feedforward([ 16, 32 ], flattenGameInputs, CRITIC_ACTIVATION_FUNC),
             keras.dense({ units: 32, activation: CRITIC_ACTIVATION_FUNC }).apply(actionsInput)
         ]), CRITIC_ACTIVATION_FUNC);
 
     return new DdpgTrainingNetwork(
-        tf.model({ inputs: mapInput, outputs: [ actor ] }),
-        tf.model({ inputs: [ mapInput, actionsInput ], outputs: [ critic ] }),
+        tf.model({ inputs: gameInputs, outputs: [ actor ] }),
+        tf.model({ inputs: [ ...gameInputs, actionsInput ], outputs: [ critic ] }),
         keras.adam(actorLearningRate),
         keras.adam(criticLearningRate)
     );

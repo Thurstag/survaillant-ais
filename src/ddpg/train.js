@@ -30,9 +30,11 @@ const Argument = {
     BASE_NETWORK_FOLDER: "base_network_folder",
     REPRESENTATION: "representation",
     STATE_MODE: "state_mode",
+    ITEMS: "items",
     FLASHLIGHT_RADIUS: "flashlight_radius",
     NORMAL_MAP_WIDTH: "input_map_width",
-    NORMAL_MAP_HEIGHT: "input_map_height"
+    NORMAL_MAP_HEIGHT: "input_map_height",
+    TURNS_LIMIT: "turns_limit"
 };
 
 /**
@@ -85,15 +87,15 @@ async function train(args) {
     })();
 
     // Create environment
-    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator);
-    const stateShape = env.stateShape;
+    const items = args[Argument.ITEMS];
+    const env = maps.length === 1 ? new SingleMapEnvironment(maps[0], rewardPolicy, stateGenerator, items) : new ListMapEnvironment(maps, rewardPolicy, stateGenerator, items);
 
     // Create network
     const networkImportFolder = args[Argument.BASE_NETWORK_FOLDER], actorLearningRate = args[Hyperparameter.ACTOR_LEARNING_RATE],
         criticLearningRate = args[Hyperparameter.CRITIC_LEARNING_RATE];
     let network;
     if (networkImportFolder === undefined || networkImportFolder === null) {
-        network = random(stateShape.x, stateShape.y, stateShape.z, actorLearningRate, criticLearningRate);
+        network = random(env.shapes, env.actionsCount, actorLearningRate, criticLearningRate);
     } else {
         network = await fromNetworks(`file://${networkImportFolder}${sep}${ACTOR_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
             `file://${networkImportFolder}${sep}${CRITIC_NETWORK_NAME}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
@@ -105,7 +107,7 @@ async function train(args) {
     const saveFrequency = args[Argument.NETWORK_SAVE_FREQUENCY];
     const networkExportFolder = args[Argument.NETWORK_FOLDER];
     const epochs = args[Argument.EPOCHS];
-    const agent = new DdpgAgent(epochs, args[Hyperparameter.TAU], args[Hyperparameter.GAMMA],
+    const agent = new DdpgAgent(epochs, args[Argument.TURNS_LIMIT], args[Hyperparameter.TAU], args[Hyperparameter.GAMMA],
         args[Hyperparameter.BUFFER_CAPACITY], args[Hyperparameter.TRAIN_BATCH_SIZE], actorLearningRate, criticLearningRate);
     const [ id, statsPerEpoch ] = await agent.train(network, env, async (epoch, metadata, network) => {
         if (epoch % saveFrequency === 0 || epoch === epochs - 1) {

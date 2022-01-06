@@ -13,7 +13,7 @@ import LOGGER from "../common/logger.js";
 import { DdpgDefaultHyperparameter as DefaultHyperparameter } from "./hyperparameters.js";
 import { ACTOR_NETWORK_NAME, CRITIC_NETWORK_NAME, random } from "./networks.js";
 
-const STATISTICS_FREQUENCY = 40, TURNS_LIMIT = 1234;
+const STATISTICS_FREQUENCY = 40;
 
 /**
  * Buffer storing games history
@@ -46,15 +46,15 @@ class Buffer {
     /**
      * Store game step's data
      *
-     * @param {Tensor} state State of the map
+     * @param {Tensor[]} state State of the game
      * @param {Tensor} action Action done
      * @param {number} reward Reward obtained
-     * @param {Tensor} nextState Next state of the map
+     * @param {Tensor[]} nextState Next state of the game
      */
     store(state, action, reward, nextState) {
         const index = this.#size % this.#capacity;
 
-        this.#states[index]?.dispose();
+        this.#states[index]?.map(t => t?.dispose());
         this.#states[index] = state;
         this.#nextStates[index] = nextState;
         this.#actions[index]?.dispose();
@@ -74,22 +74,22 @@ class Buffer {
     backpropagation(network, targetNetwork, gamma = DefaultHyperparameter.GAMMA) {
         const batchIndices = tf.tidy(() => tf.randomUniform([ this.#batchSize ], 0, Math.min(this.#size, this.#capacity), "int32").dataSync());
 
-        const statesBatch = new Array(batchIndices.length);
-        const nextStatesBatch = new Array(batchIndices.length);
+        const statesBatches = Array.apply(null, new Array(this.#states[batchIndices[0]].length)).map(() => new Array(batchIndices.length));
+        const nextStatesBatches = Array.apply(null, new Array(this.#nextStates[batchIndices[0]].length)).map(() => new Array(batchIndices.length));
         const rewardsBatch = new Array(batchIndices.length);
         const actionsBatch = new Array(batchIndices.length);
         for (let i = 0; i < batchIndices.length; i++) {
             const index = batchIndices[i];
 
-            statesBatch[i] = this.#states[index];
-            nextStatesBatch[i] = this.#nextStates[index];
+            this.#states[index].forEach((s, iter) => statesBatches[iter][i] = s);
+            this.#nextStates[index].forEach((s, iter) => nextStatesBatches[iter][i] = s);
             rewardsBatch[i] = this.#rewards[index];
             actionsBatch[i] = this.#actions[index];
         }
 
         tf.tidy(() => {
-            const nextStatesBatchTensor = tf.concat(nextStatesBatch.map(t => t.expandDims()));
-            const statesBatchTensor = tf.concat(statesBatch.map(t => t.expandDims()));
+            const nextStatesBatchTensor = nextStatesBatches.map(batch => tf.concat(batch.map(t => t.expandDims())));
+            const statesBatchTensor = statesBatches.map(batch => tf.concat(batch.map(t => t.expandDims())));
             const actionsBatchTensor = tf.concat(actionsBatch.map(t => t.expandDims()));
             const rewardsBatchTensor = tf.tensor2d(rewardsBatch, [ rewardsBatch.length, 1 ]);
 
@@ -111,8 +111,8 @@ class Buffer {
      */
     dispose() {
         for (let i = 0; i < this.#capacity; i++) {
-            this.#states[i]?.dispose();
-            this.#nextStates[i]?.dispose();
+            this.#states[i]?.map(t => t?.dispose());
+            this.#nextStates[i]?.map(t => t?.dispose());
             this.#actions[i]?.dispose();
         }
     }
@@ -125,6 +125,7 @@ class DdpgAgent {
     static ID = "ddpg";
 
     #epochs;
+    #turns;
     #tau;
     #gamma;
     #bufferCapacity;
@@ -136,6 +137,7 @@ class DdpgAgent {
      * Constructor
      *
      * @param {number} epochs Epochs
+     * @param {number} turns Maximum number of turns that can be done
      * @param {number} tau Tau
      * @param {number} gamma Gamma
      * @param {number} bufferCapacity Buffer's capacity
@@ -143,8 +145,9 @@ class DdpgAgent {
      * @param {number} actorLearningRate Actor network learning rate
      * @param {number} criticLearningRate Critic network learning rate
      */
-    constructor(epochs, tau = DefaultHyperparameter.TAU, gamma = DefaultHyperparameter.GAMMA, bufferCapacity = DefaultHyperparameter.BUFFER_CAPACITY, trainBatchSize = DefaultHyperparameter.TRAIN_BATCH_SIZE, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNING_RATE, criticLearningRate = DefaultHyperparameter.CRITIC_LEARNING_RATE) {
+    constructor(epochs, turns, tau = DefaultHyperparameter.TAU, gamma = DefaultHyperparameter.GAMMA, bufferCapacity = DefaultHyperparameter.BUFFER_CAPACITY, trainBatchSize = DefaultHyperparameter.TRAIN_BATCH_SIZE, actorLearningRate = DefaultHyperparameter.ACTOR_LEARNING_RATE, criticLearningRate = DefaultHyperparameter.CRITIC_LEARNING_RATE) {
         this.#epochs = epochs;
+        this.#turns = turns;
         this.#tau = tau;
         this.#gamma = gamma;
         this.#bufferCapacity = bufferCapacity;
@@ -162,8 +165,7 @@ class DdpgAgent {
      * @return {Promise<[String, GamesStats[]]>} Training identifier and Games statistics per epoch
      */
     async train(network, env, onEpoch) {
-        const stateShape = env.stateShape;
-        const trainingNetwork = random(stateShape.x, stateShape.y, stateShape.z, this.#actorLearningRate, this.#criticLearningRate);
+        const trainingNetwork = random(env.shapes, env.actionsCount, this.#actorLearningRate, this.#criticLearningRate);
         network.copyWeightsTo(trainingNetwork);
 
         const buffer = new Buffer(this.#bufferCapacity, this.#trainBatchSize);
@@ -212,10 +214,10 @@ class DdpgAgent {
         env.reset();
 
         let lastState = env.state();
-        for (let i = 0; i < TURNS_LIMIT; i++) {
+        for (let i = 0; i < this.#turns; i++) {
             // Play
             const { done, action, reward } = tf.tidy(() => {
-                let logits = network.actor(lastState.expandDims());
+                let logits = network.actor(lastState.map(t => t.expandDims()));
                 logits = logits.reshape([ logits.shape[logits.shape.length - 1] ]);
 
                 const action = tf.tidy(() => tf.multinomial(logits, 1).dataSync()[0]);
