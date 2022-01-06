@@ -22,19 +22,33 @@ const mapLoader = new Lazy(() => {
 
     return fs.readdirSync(mapFolder).map(dungeon => new Map(JSON.parse(fs.readFileSync(mapFolder + "/" + dungeon + "/info.json", "utf8"))));
 });
+const ITEMS = [ "arrow", "bomb", "dynamite" ];
+const MOVE_TYPE = {
+    MOVEMENT: "movement",
+    ARROW: ITEMS[0],
+    BOMB: ITEMS[1],
+    DYNAMITE: ITEMS[2]
+};
 
 const Survaillant = {
     getMaps: () => mapLoader.value,
     createGame: (map) => {
         return new SurvaillantGame(map, "solo");
     },
-    PlayerMoves: [ [ -1, 0 ], [ 1, 0 ], [ 0, -1 ], [ 0, 1 ] ],
+    PlayerMoves: [
+        [ MOVE_TYPE.MOVEMENT, -1, 0 ], [ MOVE_TYPE.MOVEMENT, 1, 0 ], [ MOVE_TYPE.MOVEMENT, 0, -1 ], [ MOVE_TYPE.MOVEMENT, 0, 1 ],
+        [ MOVE_TYPE.ARROW, -1, 0 ], [ MOVE_TYPE.ARROW, 1, 0 ], [ MOVE_TYPE.ARROW, 0, -1 ], [ MOVE_TYPE.ARROW, 0, 1 ],
+        [ MOVE_TYPE.BOMB, -1, 0 ], [ MOVE_TYPE.BOMB, 1, 0 ], [ MOVE_TYPE.BOMB, 0, -1 ], [ MOVE_TYPE.BOMB, 0, 1 ],
+        [ MOVE_TYPE.DYNAMITE, -1, 0 ], [ MOVE_TYPE.DYNAMITE, 1, 0 ], [ MOVE_TYPE.DYNAMITE, 0, -1 ], [ MOVE_TYPE.DYNAMITE, 0, 1 ]
+    ],
     ActionConsequence: {
         MOVED: "MOVED",
         BAD_MOVEMENT: "BAD_MOVEMENT",
         GAME_OVER: "GAME_OVER",
-        KILL: "KILL"
-    }
+        KILL: "KILL",
+        ITEM_MISSING: "ITEM_MISSING"
+    },
+    MOVE_TYPE, ITEMS
 };
 
 // TODO: Doc
@@ -77,9 +91,19 @@ class SurvaillantGame {
         gameInstance.players.forEach(onEntity);
     }
 
+    /**
+     * Execute the given action
+     *
+     * @param {[string, number, number]} Action (see {@link Survaillant#PlayerMoves})
+     * @return {string} Action consequence
+     */
+    execute([ type, dx, dy ]) {
+        return type === MOVE_TYPE.MOVEMENT ? this.#movePlayer(dx, dy) : this.#useItem(type, dx, dy);
+    }
+
     // TODO: Doc
-    movePlayer(dx, dy) {
-        let player = this.game.players[0];
+    #movePlayer(dx, dy) {
+        const player = this.game.players[0];
 
         // Params check
         if (dx === undefined || dy === undefined) throw "dx and dy required";
@@ -102,21 +126,29 @@ class SurvaillantGame {
         return this.game.nbKilledMonsters > oldKillCount ? Survaillant.ActionConsequence.KILL : Survaillant.ActionConsequence.MOVED;
     }
 
-    // TODO: Doc
-    selectItem(item) {
-        const availableItems = [ "", "arrow", "bomb", "dynamite" ];
+    /**
+     * Use an item
+     *
+     * @param {string} item Item to use
+     * @param {number} dx Item use direction in x-axis
+     * @param {number} dy Item use direction in y-axis
+     * @return {string} Action consequence
+     */
+    #useItem(item, dx, dy) {
+        const player = this.game.players[0];
 
-        let player = this.game.player[0];
-
-        if (item == undefined || !availableItems.includes(item))
+        if (item === undefined || !ITEMS.includes(item)) {
             throw "A correct Item is required";
+        }
 
-        if (player.inventory[item] == 0) // The player has no item
-            return -1;
+        if (player.inventory[item] === 0) {
+            return this.#stats.gameOverReason = Survaillant.ActionConsequence.ITEM_MISSING;
+        }
 
-        // set item to the player
+        // Use item
         player.selectedItem = item;
         player.nextMove = null;
+        return this.#movePlayer(dx, dy);
     }
 }
 

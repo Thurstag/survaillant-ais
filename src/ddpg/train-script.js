@@ -5,7 +5,7 @@
  * Refer to the LICENSE file included.
  */
 import LOGGER from "../common/logger.js";
-import { REFER_POLICIES_MESSAGE, REFER_STATE_MESSAGE } from "../common/readme.js";
+import { ITEMS_MESSAGE, REFER_POLICIES_MESSAGE, REFER_STATE_MESSAGE } from "../common/readme.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
 import { Argument, train } from "./train.js";
@@ -79,6 +79,10 @@ function parseArguments() {
         required: true,
         help: "Representation of the game's state (" + REFER_STATE_MESSAGE + ")"
     });
+    parser.add_argument(`--${Argument.ITEMS}`, {
+        action: "store_true",
+        help: ITEMS_MESSAGE
+    });
     parser.add_argument(`--${Argument.NETWORK_FOLDER}`, {
         type: path,
         required: true,
@@ -107,6 +111,12 @@ function parseArguments() {
         type: path,
         required: false,
         help: "Path to a folder containing networks (actor.sm and critic.sm) to train"
+    });
+    parser.add_argument(`--${Argument.TURNS_LIMIT}`, {
+        default: 1234,
+        type: "int",
+        required: false,
+        help: "Maximum number of turns that can be done during training"
     });
 
     for (const [ name, value ] of Object.entries(DefaultHyperparameter)) {

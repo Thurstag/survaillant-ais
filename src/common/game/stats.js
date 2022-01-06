@@ -238,10 +238,11 @@ class GameStats {
     /**
      * Set the game over reason
      *
-     * @param value New reason (either {@link Survaillant#ActionConsequence#BAD_MOVEMENT} or {@link Survaillant#ActionConsequence#GAME_OVER})
+     * @param value New reason (either {@link Survaillant#ActionConsequence#BAD_MOVEMENT} or {@link Survaillant#ActionConsequence#GAME_OVER}
+     * or {@link Survaillant#ActionConsequence#ITEM_MISSING})
      */
     set gameOverReason(value) {
-        if (value !== Survaillant.ActionConsequence.BAD_MOVEMENT && value !== Survaillant.ActionConsequence.GAME_OVER) {
+        if (value !== Survaillant.ActionConsequence.BAD_MOVEMENT && value !== Survaillant.ActionConsequence.GAME_OVER && value !== Survaillant.ActionConsequence.ITEM_MISSING) {
             throw new Error(`Unknown game over reason: ${value}`);
         }
 

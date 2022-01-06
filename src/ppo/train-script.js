@@ -11,7 +11,7 @@ import { RewardPolicy } from "../common/game/environment/reward.js";
 import { Generator } from "../common/game/environment/state/states.js";
 import { Representation } from "../common/game/environment/state/tensor.js";
 import LOGGER from "../common/logger.js";
-import { REFER_POLICIES_MESSAGE, REFER_STATE_MESSAGE } from "../common/readme.js";
+import { REFER_POLICIES_MESSAGE, REFER_STATE_MESSAGE, ITEMS_MESSAGE } from "../common/readme.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { PpoDefaultHyperparameter as DefaultHyperparameter, PpoHyperparameterInfo as HyperparameterInfo } from "./hyperparameters.js";
 import { Argument, train } from "./train.js";
@@ -78,6 +78,10 @@ function parseArguments() {
         choices: Object.values(Representation).map(r => r.toLowerCase()),
         required: true,
         help: `Representation of the game's state (${REFER_STATE_MESSAGE})`
+    });
+    parser.add_argument(`--${Argument.ITEMS}`, {
+        action: "store_true",
+        help: ITEMS_MESSAGE
     });
     parser.add_argument(`--${Argument.NETWORK_FOLDER}`, {
         type: path,

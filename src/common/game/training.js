@@ -26,7 +26,8 @@ const TrainingInformationKey = {
                 }
             },
             REPRESENTATION: "representation"
-        }
+        },
+        ITEMS: "items"
     }
 };
 

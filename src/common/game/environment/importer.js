@@ -19,8 +19,8 @@ import { EntitiesRepresentation } from "./state/tensor.js";
  * @param {String} modelFile Path to file defining the network
  * @param {String} trainingInfoFile Path to a file defining training information
  * @param {function(String): *} fileLoader Function to load a file's content given a given path
- * @return {Promise<{stateGenerator: StateGenerator, trainingInfo: Object, network: SurvaillantFinalNetwork, policy: (MapRewardPolicy|ScoreDrivenPolicy)}>}
- * State generator, training information, network, and reward policy
+ * @return {Promise<{stateGenerator: StateGenerator, trainingInfo: Object, network: SurvaillantFinalNetwork, policy: (MapRewardPolicy|ScoreDrivenPolicy), items: boolean}>}
+ * State generator, training information, network, reward policy, and if items are enabled
  */
 async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
     // Load training info
@@ -41,10 +41,11 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
     })();
 
     // Create policy
-    const policy = createPolicy(trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.POLICY].toUpperCase());
+    const envInfo = trainingInfo[TrainingInformationKey.ENV];
+    const policy = createPolicy(envInfo[TrainingInformationKey.ENV_KEYS.POLICY].toUpperCase());
 
     // Retrieve representation
-    let stateInfo = trainingInfo[TrainingInformationKey.ENV][TrainingInformationKey.ENV_KEYS.STATE];
+    const stateInfo = envInfo[TrainingInformationKey.ENV_KEYS.STATE];
     const representation = EntitiesRepresentation[stateInfo[TrainingInformationKey.ENV_KEYS.STATE_KEYS.REPRESENTATION].toUpperCase()];
 
     // Create state generator
@@ -66,7 +67,10 @@ async function loadFrom(modelFile, trainingInfoFile, fileLoader) {
         }
     })();
 
-    return { network, policy, stateGenerator, trainingInfo };
+    // Retrieve items
+    const items = !!envInfo[TrainingInformationKey.ENV_KEYS.ITEMS];
+
+    return { network, policy, stateGenerator, trainingInfo, items };
 }
 
 export default loadFrom;

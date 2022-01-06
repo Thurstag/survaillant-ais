@@ -7,7 +7,6 @@
 import tf from "@tensorflow/tfjs";
 import fs from "fs/promises";
 import path from "path";
-import Survaillant from "../survaillant/src/index.js";
 import LOGGER from "./logger.js";
 
 /**
@@ -15,9 +14,9 @@ import LOGGER from "./logger.js";
  */
 class SurvaillantFinalNetwork {
     /**
-     * Generate predictions for the given batch of inputs
+     * Generate predictions for the given inputs
      *
-     * @param {Tensor} inputs Batch of inputs
+     * @param {Tensor[]} inputs Batch of tensors for each input
      * @return {Tensor} Prediction (in [0, {@link SurvaillantTrainingNetwork#ACTIONS_COUNT})) for each input
      */
     predict(inputs) { // eslint-disable-line no-unused-vars
@@ -29,8 +28,6 @@ class SurvaillantFinalNetwork {
  * Base class for networks that are in training phase, implementing common methods like summary, gradients application...
  */
 class SurvaillantTrainingNetwork {
-    /** Number of possible actions that a player can do */
-    static ACTIONS_COUNT = Survaillant.PlayerMoves.length;
     static SAVED_MODEL_EXTENSION = ".sm";
     static MODEL_FILENAME = "model.json";
     static TRAINING_INFO_FILENAME = "training_info.json";
