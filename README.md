@@ -43,19 +43,20 @@ Indeed, we have to reward the AI for each decision that it makes. We define 4 co
 - Moved (the decision represents a valid movement)
 - Game over (the decision leads to a game over)
 - Kill (the decision will kill a monster)
+- Item missing (the decision tries to use an unavailable item)
 
 We have defined 4 policies: the bandit, neutral, score-based, and doom slayer.
 
 ### Bandit
 
-Bandit is a policy that penalized a game over (`-5`) and bad movements (`-1`) but the game isn't considered as done in case of bad movement
+Bandit is a policy that penalized a game over (`-5`) and bad movements/item miss (`-1`) but the game isn't considered as done in these cases
 unlike game over. If the AI moves or kills a monster, we reward it with `+1`.
 Its identifier is `bandit` in script arguments.
 
 ### Neutral
 
-Neutral is a policy that uses the same rules as the real game. It penalizes a game over and bad movements with `-5`
-and in both cases, the game is done. If the AI moves or kills a monster, we reward it with `+1`.
+Neutral is a policy that uses the same rules as the real game. It penalizes a game over, item miss, and bad movements with `-5`
+and in all cases, the game is done. If the AI moves or kills a monster, we reward it with `+1`.
 Its identifier is `neutral` in script arguments.
 
 ### Score-based
