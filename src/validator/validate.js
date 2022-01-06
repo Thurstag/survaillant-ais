@@ -4,6 +4,7 @@
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */
+import tf from "@tensorflow/tfjs";
 import { ArgumentDefaultsHelpFormatter, ArgumentParser } from "argparse";
 import fs from "fs";
 import { join, sep } from "path";
@@ -18,7 +19,6 @@ import { SurvaillantTrainingNetwork } from "../common/network.js";
 import { BACKEND, load as loadTfBackend } from "../common/tensorflow/node/backend-loader.js";
 import { POLICY_NETWORK_NAME } from "../ppo/networks.js";
 import Map from "../survaillant/src/models/games/Map.js";
-import tf from "@tensorflow/tfjs";
 
 const Argument = {
     MAPS: "maps",
@@ -99,7 +99,7 @@ async function main() {
 
     // Load network, state generator...
     let networkFolder = args[Argument.NETWORK];
-    const { network, policy, stateGenerator, trainingInfo } = await loadFrom(`file://${networkFolder}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
+    const { network, policy, stateGenerator, trainingInfo, items } = await loadFrom(`file://${networkFolder}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`,
         join(networkFolder, SurvaillantTrainingNetwork.TRAINING_INFO_FILENAME), fs.readFileSync);
 
     const games = args[Argument.GAMES];
@@ -108,7 +108,7 @@ async function main() {
     // Run maps
     const stats = new GamesStats();
     for (const map of maps) {
-        const env = new SingleMapEnvironment(map, policy, stateGenerator);
+        const env = new SingleMapEnvironment(map, policy, stateGenerator, items);
         const progress = new ProgressBar(`Playing '${map.name}' [:bar] :rate/gps :percent :etas`, { total: games, complete: "=", incomplete: " ", width: 20 });
 
         // Pay games
@@ -118,16 +118,14 @@ async function main() {
             let j;
             for (j = 0; j < turnsLimit; j++) {
                 // Ask network its prediction
-
                 const action = tf.tidy(() => {
                     const state = env.state();
 
                     if (trainingInfo.env.state.flattend) {
-                        // Get the sate shape
-                        let dimensionToReduce = (state.shape.reduce((accu, current) => accu * current, 1));
-                        return network.predict(state.reshape([ dimensionToReduce ]).expandDims()).dataSync()[0];
+                        const dimensions = state.map(t => t.shape.reduce((accu, current) => accu * current, 1));
+                        return network.predict(state.map((t, index) => t.reshape([ dimensions[index] ]).expandDims())).dataSync()[0];
                     }
-                    else return network.predict(state.expandDims()).dataSync()[0];
+                    return network.predict(state.map(t => t.expandDims())).dataSync()[0];
                 });
 
                 if (env.step(action).done) {
