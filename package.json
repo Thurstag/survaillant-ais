@@ -5,7 +5,7 @@
     "scripts": {
         "example:random": "node dev/survaillant/random-player.js",
         "validate": "node src/validator/validate.js",
-        "dqn:train": "node src/dqn/train.js",
+        "dqn:train": "node src/dqn/train-script.js",
         "ppo:train": "node src/ppo/train-script.js",
         "ddpg:train": "node src/ddpg/train-script.js",
         "test": "mocha test/**/*.js",
@@ -20,8 +20,8 @@
         "argparse": "^2.0.1",
         "pathfinding": "^0.4.18",
         "progress": "^2.0.3",
-        "uuid": "^8.3.2",
         "timeunit": "^1.1.1",
+        "uuid": "8.3.2",
         "winston": "^3.3.3"
     },
     "devDependencies": {

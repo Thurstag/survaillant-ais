@@ -19,7 +19,7 @@ class Entity {
             type: this.type,
             name: this.name,
             dead: this.dead,
-            pos: this.pos,
+            pos: this.pos,     
         };
     }
 }
