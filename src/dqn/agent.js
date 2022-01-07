@@ -34,9 +34,6 @@ class SurvaillantDQNAgent {
             this.model = fromNetworks(`file://${env.baseNetworkFolder}${sep}${SurvaillantDQNAgent.ID}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`);
             this.modelTarget = fromNetworks(`file://${env.baseNetworkFolder}${sep}${SurvaillantDQNAgent.ID}${SurvaillantTrainingNetwork.SAVED_MODEL_EXTENSION}${sep}${SurvaillantTrainingNetwork.MODEL_FILENAME}`);
         }
-
-        this.model = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
-        this.modelTarget = fromZero(env.stateShape.x, env.stateShape.y, env.stateShape.z);
         
         this.config = config;
         this.env = env;
