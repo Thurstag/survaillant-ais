@@ -1,6 +1,6 @@
 /**
  * @licence
- * Copyright 2021-2021 - Survaillant Artificial Intelligences
+ * Copyright 2021-2022 - Survaillant Artificial Intelligences
  * Licensed under MIT or any later version
  * Refer to the LICENSE file included.
  */

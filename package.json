@@ -1,6 +1,6 @@
 {
     "name": "survaillant-ais",
-    "version": "0.0.0",
+    "version": "1.0.0",
     "description": "A set of artificial intelligences playing Survaillant",
     "scripts": {
         "example:random": "node dev/survaillant/random-player.js",
