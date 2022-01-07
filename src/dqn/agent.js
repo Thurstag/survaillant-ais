@@ -110,11 +110,11 @@ class SurvaillantDQNAgent {
                         let doneSample = tf.tensor1d(
                             indices.map(i => doneHistory[i])
                         );
-                        // Build the updated Q-values for the sampled future states
+                        
                         // Use the target model for stabilitys
-
                         let futureRewards = this.modelTarget.predict(tf.concat(stateNextSample));
 
+                        // Define Hubber loss
                         const hubberLoss = tf.tidy(() => {
 
                             // Q value = reward + discount factor * expected future reward
@@ -122,8 +122,8 @@ class SurvaillantDQNAgent {
 
                             // If final frame set the last value to -1
                             updatedQValues = updatedQValues.mul(tf.scalar(1).sub(doneSample)).sub(doneSample);
+                            
                             // Create a mask so we only calculate loss on the updated Q-values
-
                             let masks = tf.oneHot(actionSample, this.actions);
 
                             // Train the model on the states and updated Q-values
@@ -131,8 +131,8 @@ class SurvaillantDQNAgent {
 
                             // Apply the masks to the Q-values to get the Q-value for action taken
                             let qAction = tf.sum(tf.mul(qValues, masks), 1);
+                            
                             // Calculate loss between new Q-value and old Q-value
-
                             return tf.losses.huberLoss(updatedQValues, qAction);
                         });
                         
