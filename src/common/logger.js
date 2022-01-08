@@ -12,7 +12,7 @@ const LOGGER = winston.createLogger({
         winston.format.colorize(),
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
         winston.format.simple(),
-        winston.format.printf(info => `${info.level}: [${info.timestamp}] ${info.message}`)
+        winston.format.printf(info => `${info.level}: [${info.timestamp}] [Process-${process.pid}] ${info.message}`)
     ),
     transports: [
         new winston.transports.Console()
